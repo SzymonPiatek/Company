@@ -23,6 +23,12 @@ services:
   resource-service:
     build:
       context: ./resource-service
+      dockerfile: Dockerfile
+    ports:
+      - '5555:5555'
+    volumes:
+      - ./resource-service:/usr/src/app
+      - /usr/src/app/node_modules
     env_file:
       - ../envs/.env-db
     labels:
@@ -32,6 +38,7 @@ services:
     - "traefik.http.services.resource.loadbalancer.server.port=3000"
     depends_on:
       - postgres
+    command: ["sh", "-c", "npm run dev & npx prisma studio"]
 
 volumes:
   pgdata:

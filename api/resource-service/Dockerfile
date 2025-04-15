@@ -8,8 +8,12 @@ RUN npm install
 
 COPY . .
 
+RUN npx prisma generate
+
 RUN npm run build
 
 EXPOSE 3000
 
-CMD [ "npm", "start" ]
+ENV NODE_ENV=development
+
+CMD ["npm", "run", "dev"]

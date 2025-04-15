@@ -3,16 +3,19 @@
   "version": "1.0.0",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "npx prisma migrate deploy && npx prisma generate && nodemon --files src/server.ts --legacy-watch",
     "build": "tsc",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "prettier": "prettier . --check",
+    "format": "prettier . --write"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "nodemon": "^3.1.9",
     "prettier": "^3.5.3",
     "prisma": "^6.6.0"
   },

@@ -7,7 +7,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Example {
-  id   String @id @default(uuid())
-  name String
+model ResourceType {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  schema      Json
+  resources   Resource[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Resource {
+  id          String   @id @default(uuid())
+  typeId      String
+  name        String
+  description String?
+  metadata    Json
+  available   Boolean  @default(true)
+  location    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  type ResourceType @relation(fields: [typeId], references: [id], onDelete: Cascade)
 }
