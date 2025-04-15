@@ -15,10 +15,8 @@ services:
   postgres:
     image: postgres:15
     restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: resource_service
+    env_file:
+      - ../envs/.env-db
     volumes:
       - pgdata:/var/lib/postgresql/data
 
