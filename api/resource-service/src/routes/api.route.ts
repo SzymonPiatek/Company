@@ -6,7 +6,7 @@ import resourceTypeRoute from '../models/resourceType/resourceType.route';
 const router = Router();
 
 router.use('/health', healthRoute);
-router.use('/resource-types', resourceTypeRoute);
+router.use('/resourceTypes', resourceTypeRoute);
 router.use('/resources', resourceRoute);
 
 export default router;
