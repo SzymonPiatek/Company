@@ -1,23 +1,21 @@
-import type { Request, Response } from 'express';
 import prisma from '../../../prismaClient';
 import paginateData from '../../../utils/helpers/paginateData';
+import parsePaginationQuery from '../../../utils/helpers/parsePaginationQuery';
+import type { RequestHandler } from 'express';
 
-const getResourcesHandler = async (req: Request, res: Response) => {
+const getResourcesHandler: RequestHandler = async (req, res) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const sortBy = req.query.sortBy as string;
-    const sortOrder = req.query.sortOrder as string;
+    const pagination = parsePaginationQuery(req);
 
     const result = await paginateData(
       prisma.resource,
       {
         include: { type: true },
       },
-      { page, limit, sortBy, sortOrder },
+      pagination,
     );
 
-    res.json(result);
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error', details: error });
   }

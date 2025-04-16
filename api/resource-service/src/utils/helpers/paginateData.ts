@@ -1,19 +1,4 @@
-type PaginationParams = {
-  page?: number;
-  limit?: number;
-  sortBy?: string;
-  sortOrder?: string | null | undefined | '';
-};
-
-type PaginationResult<T> = {
-  data: T[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-};
+import type { PaginationParams, PaginationResult } from '../types/types';
 
 async function paginateData<T>(
   model: any,
