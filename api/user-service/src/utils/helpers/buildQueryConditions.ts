@@ -2,17 +2,27 @@ type FieldConditions = {
   [field: string]: string | number | boolean | undefined;
 };
 
+type QueryCondition = Record<string, any>;
+
 type SearchableWhereOptions = {
   fields: string[];
   filters: FieldConditions;
   search?: string;
 };
 
-const buildQueryConditions = ({ fields, filters, search }: SearchableWhereOptions): Record<string, any> => {
-  const andConditions: Record<string, any>[] = [];
+const buildQueryConditions = ({ fields, filters, search }: SearchableWhereOptions): QueryCondition => {
+  const andConditions: QueryCondition[] = [];
 
   for (const [key, value] of Object.entries(filters)) {
-    if (value !== undefined) {
+    if (value === undefined) continue;
+
+    if (value === 'true' || value === 'false') {
+      andConditions.push({
+        [key]: {
+          equals: value === 'true',
+        },
+      });
+    } else {
       andConditions.push({
         [key]: {
           contains: String(value),
@@ -22,10 +32,11 @@ const buildQueryConditions = ({ fields, filters, search }: SearchableWhereOption
     }
   }
 
-  const orConditions: Record<string, any>[] = [];
+  const orConditions: QueryCondition[] = [];
 
   if (search) {
     const searchWords = search.trim().split(/\s+/);
+
     for (const word of searchWords) {
       for (const field of fields) {
         orConditions.push({
@@ -38,7 +49,7 @@ const buildQueryConditions = ({ fields, filters, search }: SearchableWhereOption
     }
   }
 
-  const where: Record<string, any> = {};
+  const where: QueryCondition = {};
 
   if (andConditions.length > 0) {
     where.AND = andConditions;

@@ -20,16 +20,9 @@ const getUsersHandler: RequestHandler = async (req, res) => {
 
     const where = buildQueryConditions({
       fields: ['email', 'firstName', 'lastName'],
-      filters: { email, firstName, lastName },
+      filters: { email, firstName, lastName, isActive },
       search,
     });
-
-    if (isActive !== undefined) {
-      const parsed = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
-      if (parsed !== undefined) {
-        where.isActive = parsed;
-      }
-    }
 
     const result = await paginateData(
       prisma.user,
