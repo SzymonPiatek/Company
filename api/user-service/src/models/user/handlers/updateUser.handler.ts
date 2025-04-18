@@ -2,7 +2,11 @@ import type { RequestHandler } from 'express';
 import prisma from '../../../prismaClient';
 import { hashPassword } from '../../../utils/helpers/bcrypt';
 
-type UpdateUserProps = {
+type UserParamsProps = {
+  id: string;
+};
+
+type UserBodyProps = {
   email?: string;
   firstName?: string;
   lastName?: string;
@@ -10,10 +14,10 @@ type UpdateUserProps = {
   isActive?: boolean;
 };
 
-const updateUserHandler: RequestHandler<{ id: string }, unknown, UpdateUserProps> = async (req, res): Promise<void> => {
+const updateUserHandler: RequestHandler = async (req, res): Promise<void> => {
   try {
-    const { id } = req.params;
-    const data = req.body;
+    const { id } = req.params as UserParamsProps;
+    const data = req.body as UserBodyProps;
 
     if (data.email) {
       const existingUser = await prisma.user.findUnique({

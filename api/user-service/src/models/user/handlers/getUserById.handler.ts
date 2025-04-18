@@ -1,8 +1,12 @@
 import { RequestHandler } from 'express';
 import prisma from '../../../prismaClient';
 
+type UserParamsProps = {
+  id: string;
+};
+
 const getUserByIdHandler: RequestHandler = async (req, res): Promise<void> => {
-  const { id } = req.params;
+  const { id } = req.params as UserParamsProps;
 
   try {
     const results = await prisma.user.findUnique({
