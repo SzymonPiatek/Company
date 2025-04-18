@@ -47,6 +47,24 @@ const updateResourceTypeHandler: RequestHandler<{ id: string }, unknown, UpdateR
       data: { name, code },
     });
 
+    if (updated && existingType.code !== code) {
+      const resources = await prisma.resource.findMany({
+        where: { typeId: id },
+      });
+
+      await Promise.all(
+        resources.map((resource) => {
+          const parts = resource.code.split('-');
+          const numeric = parts[1] || '000001';
+          const newCode = `${code}-${numeric}`;
+          return prisma.resource.update({
+            where: { id: resource.id },
+            data: { code: newCode },
+          });
+        }),
+      );
+    }
+
     res.status(200).json(updated);
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error', details: error });
