@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ResourceType {
+  id   String @id @default(uuid())
+  name String @unique
+  code String @unique
+
+  resources Resource[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Resource {
+  id          String  @id @default(uuid())
+  name        String
+  code        String
+  description String?
+  isActive    Boolean @default(true)
+
+  typeId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  type ResourceType @relation(fields: [typeId], references: [id], onDelete: Cascade)
+}
