@@ -1,13 +1,12 @@
-import type { RequestHandler } from 'express';
+import { RequestHandler } from 'express';
 import prisma from '../../../prismaClient';
 
-const getResourceByIdHandler: RequestHandler = async (req, res): Promise<void> => {
+const getUserByIdHandler: RequestHandler = async (req, res): Promise<void> => {
   const { id } = req.params;
 
   try {
-    const results = await prisma.resource.findUnique({
+    const results = await prisma.user.findUnique({
       where: { id },
-      include: { type: true },
     });
 
     if (!results) {
@@ -21,4 +20,4 @@ const getResourceByIdHandler: RequestHandler = async (req, res): Promise<void> =
   }
 };
 
-export default getResourceByIdHandler;
+export default getUserByIdHandler;

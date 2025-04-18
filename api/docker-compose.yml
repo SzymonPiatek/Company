@@ -30,6 +30,7 @@ services:
       - ./resource-service:/usr/src/app
       - /usr/src/app/node_modules
     env_file:
+      - ../envs/.env-api
       - ../envs/.env-db
     labels:
     - "traefik.enable=true"
@@ -38,7 +39,28 @@ services:
     - "traefik.http.services.resource.loadbalancer.server.port=3000"
     depends_on:
       - postgres
-    command: ["sh", "-c", "npm run dev & npx prisma studio"]
+    command: ["sh", "-c", "npm run dev & npx prisma studio --port 5555"]
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    ports:
+      - '5556:5556'
+    volumes:
+      - ./user-service:/usr/src/app
+      - /usr/src/app/node_modules
+    env_file:
+      - ../envs/.env-api
+      - ../envs/.env-db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.user.rule=PathPrefix(`/api/user`)"
+      - "traefik.http.routers.user.entrypoints=web"
+      - "traefik.http.services.user.loadbalancer.server.port=3000"
+    depends_on:
+      - postgres
+    command: ["sh", "-c", "npm run dev & npx prisma studio --port 5556"]
 
 volumes:
   pgdata:
