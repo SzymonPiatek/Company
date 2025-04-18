@@ -10,7 +10,7 @@ type UpdateResourceProps = {
 
 const updateResourceHandler: RequestHandler<{ id: string }, unknown, UpdateResourceProps> = async (req, res): Promise<void> => {
   const { id } = req.params;
-  const { name, description, isActive, typeId } = req.body;
+  const data = req.body;
 
   try {
     const existingResource = await prisma.resource.findUnique({ where: { id } });
@@ -22,12 +22,7 @@ const updateResourceHandler: RequestHandler<{ id: string }, unknown, UpdateResou
 
     const updated = await prisma.resource.update({
       where: { id },
-      data: {
-        name,
-        description,
-        isActive,
-        typeId,
-      },
+      data,
     });
 
     res.status(200).json(updated);
