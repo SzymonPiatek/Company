@@ -7,7 +7,15 @@ const getUsersHandler: RequestHandler = async (req, res) => {
   try {
     const pagination = parsePaginationQuery(req);
 
-    const result = await paginateData(prisma.user, {}, pagination);
+    const result = await paginateData(
+      prisma.user,
+      {
+        omit: {
+          password: true,
+        },
+      },
+      pagination,
+    );
 
     res.status(200).json(result);
   } catch (error) {

@@ -7,6 +7,9 @@ const getUserByIdHandler: RequestHandler = async (req, res): Promise<void> => {
   try {
     const results = await prisma.user.findUnique({
       where: { id },
+      omit: {
+        password: true,
+      },
     });
 
     if (!results) {
