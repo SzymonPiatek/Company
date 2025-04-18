@@ -2,6 +2,7 @@ import prisma from '../../../prismaClient';
 import paginateData from '../../../utils/helpers/paginateData';
 import parsePaginationQuery from '../../../utils/helpers/parsePaginationQuery';
 import type { RequestHandler } from 'express';
+import buildQueryConditions from '../../../utils/helpers/buildQueryConditions';
 
 type UsersQueryProps = {
   email?: string;
@@ -17,31 +18,23 @@ const getUsersHandler: RequestHandler = async (req, res) => {
 
     const { email, firstName, lastName, isActive, search } = req.query as UsersQueryProps;
 
-    const queryConditions: Record<string, any> = {
-      AND: [
-        email ? { email: { contains: String(email), mode: 'insensitive' } } : undefined,
-        firstName ? { firstName: { contains: String(firstName), mode: 'insensitive' } } : undefined,
-        lastName ? { lastName: { contains: String(lastName), mode: 'insensitive' } } : undefined,
-      ].filter(Boolean),
-    };
+    const where = buildQueryConditions({
+      fields: ['email', 'firstName', 'lastName'],
+      filters: { email, firstName, lastName },
+      search,
+    });
 
     if (isActive !== undefined) {
-      queryConditions.isActive = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
-    }
-
-    if (search) {
-      const searchWords = search.toString().trim().split(/\s+/);
-      queryConditions.OR = searchWords.flatMap((word: string) => [
-        { email: { contains: word, mode: 'insensitive' } },
-        { firstName: { contains: word, mode: 'insensitive' } },
-        { lastName: { contains: word, mode: 'insensitive' } },
-      ]);
+      const parsed = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
+      if (parsed !== undefined) {
+        where.isActive = parsed;
+      }
     }
 
     const result = await paginateData(
       prisma.user,
       {
-        where: queryConditions,
+        where,
         omit: {
           password: true,
         },
