@@ -1,13 +1,13 @@
-import { RequestHandler } from 'express';
+import prisma from '../../../prismaClient';
 import paginateData from '../../../utils/helpers/paginateData';
 import parsePaginationQuery from '../../../utils/helpers/parsePaginationQuery';
-import prisma from '../../../prismaClient';
+import type { RequestHandler } from 'express';
 
-const getUsersHandler: RequestHandler = async (req, res): Promise<void> => {
+const getUsersHandler: RequestHandler = async (req, res) => {
   try {
     const pagination = parsePaginationQuery(req);
 
-    const result = await paginateData(prisma.user, pagination);
+    const result = await paginateData(prisma.user, {}, pagination);
 
     res.status(200).json(result);
   } catch (error) {
