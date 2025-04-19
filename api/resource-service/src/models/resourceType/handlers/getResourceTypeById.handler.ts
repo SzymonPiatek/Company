@@ -1,8 +1,12 @@
 import type { RequestHandler } from 'express';
 import prisma from '../../../prismaClient';
 
+type ResourceTypeParamsProps = {
+  id: string;
+};
+
 const getResourceTypeByIdHandler: RequestHandler = async (req, res): Promise<void> => {
-  const { id } = req.params;
+  const { id } = req.params as ResourceTypeParamsProps;
 
   try {
     const resource = await prisma.resourceType.findUnique({

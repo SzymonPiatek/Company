@@ -1,14 +1,18 @@
 import type { RequestHandler } from 'express';
 import prisma from '../../../prismaClient';
 
-type UpdateResourceTypeProps = {
+type ResourceTypeParamsProps = {
+  id: string;
+};
+
+type ResourceTypeBodyProps = {
   name: string;
   code: string;
 };
 
-const updateResourceTypeHandler: RequestHandler<{ id: string }, unknown, UpdateResourceTypeProps> = async (req, res): Promise<void> => {
-  const { id } = req.params;
-  const { name, code } = req.body;
+const updateResourceTypeHandler: RequestHandler = async (req, res): Promise<void> => {
+  const { id } = req.params as ResourceTypeParamsProps;
+  const data = req.body as ResourceTypeBodyProps;
 
   try {
     const existingType = await prisma.resourceType.findUnique({ where: { id } });
@@ -20,7 +24,7 @@ const updateResourceTypeHandler: RequestHandler<{ id: string }, unknown, UpdateR
 
     const nameTaken = await prisma.resourceType.findFirst({
       where: {
-        name,
+        name: data.name,
         NOT: { id },
       },
     });
@@ -32,7 +36,7 @@ const updateResourceTypeHandler: RequestHandler<{ id: string }, unknown, UpdateR
 
     const codeTaken = await prisma.resourceType.findFirst({
       where: {
-        code,
+        code: data.code,
         NOT: { id },
       },
     });
@@ -45,10 +49,10 @@ const updateResourceTypeHandler: RequestHandler<{ id: string }, unknown, UpdateR
     const updatedType = await prisma.$transaction(async (tx) => {
       const updated = await tx.resourceType.update({
         where: { id },
-        data: { name, code },
+        data,
       });
 
-      if (existingType.code !== code) {
+      if (existingType.code !== data.code) {
         const resources = await tx.resource.findMany({
           where: { typeId: id },
         });
@@ -57,7 +61,7 @@ const updateResourceTypeHandler: RequestHandler<{ id: string }, unknown, UpdateR
           resources.map((resource) => {
             const parts = resource.code.split('-');
             const numeric = parts[1] || '000001';
-            const newCode = `${code}-${numeric}`;
+            const newCode = `${data.code}-${numeric}`;
             return tx.resource.update({
               where: { id: resource.id },
               data: { code: newCode },

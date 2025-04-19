@@ -1,16 +1,16 @@
 import type { RequestHandler } from 'express';
 import prisma from '../../../prismaClient';
 
-type CreateResourceProps = {
+type ResourceBodyProps = {
   name: string;
   description?: string;
   isActive?: boolean;
   typeId: string;
 };
 
-const createResourceTypeHandler: RequestHandler<unknown, unknown, CreateResourceProps> = async (req, res): Promise<void> => {
+const createResourceTypeHandler: RequestHandler = async (req, res): Promise<void> => {
   try {
-    const { name, description, isActive = false, typeId } = req.body;
+    const { name, description, isActive = false, typeId } = req.body as ResourceBodyProps;
 
     const resourceType = await prisma.resourceType.findUnique({
       where: { id: typeId },

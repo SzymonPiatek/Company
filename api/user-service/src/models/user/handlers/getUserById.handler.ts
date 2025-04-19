@@ -1,17 +1,19 @@
-import type { RequestHandler } from 'express';
+import { RequestHandler } from 'express';
 import prisma from '../../../prismaClient';
 
-type ResourceParamsProps = {
+type UserParamsProps = {
   id: string;
 };
 
-const getResourceByIdHandler: RequestHandler = async (req, res): Promise<void> => {
-  const { id } = req.params as ResourceParamsProps;
+const getUserByIdHandler: RequestHandler = async (req, res): Promise<void> => {
+  const { id } = req.params as UserParamsProps;
 
   try {
-    const results = await prisma.resource.findUnique({
+    const results = await prisma.user.findUnique({
       where: { id },
-      include: { type: true },
+      omit: {
+        password: true,
+      },
     });
 
     if (!results) {
@@ -25,4 +27,4 @@ const getResourceByIdHandler: RequestHandler = async (req, res): Promise<void> =
   }
 };
 
-export default getResourceByIdHandler;
+export default getUserByIdHandler;

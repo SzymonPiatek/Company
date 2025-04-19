@@ -1,16 +1,20 @@
 import type { RequestHandler } from 'express';
 import prisma from '../../../prismaClient';
 
-type UpdateResourceProps = {
+type ResourceParamsProps = {
+  id: string;
+};
+
+type ResourceBodyProps = {
   name?: string;
   description?: string;
   isActive?: boolean;
   typeId?: string;
 };
 
-const updateResourceHandler: RequestHandler<{ id: string }, unknown, UpdateResourceProps> = async (req, res): Promise<void> => {
-  const { id } = req.params;
-  const { name, description, isActive, typeId } = req.body;
+const updateResourceHandler: RequestHandler = async (req, res): Promise<void> => {
+  const { id } = req.params as ResourceParamsProps;
+  const data = req.body as ResourceBodyProps;
 
   try {
     const existingResource = await prisma.resource.findUnique({ where: { id } });
@@ -22,12 +26,7 @@ const updateResourceHandler: RequestHandler<{ id: string }, unknown, UpdateResou
 
     const updated = await prisma.resource.update({
       where: { id },
-      data: {
-        name,
-        description,
-        isActive,
-        typeId,
-      },
+      data,
     });
 
     res.status(200).json(updated);

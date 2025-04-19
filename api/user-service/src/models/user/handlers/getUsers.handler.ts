@@ -4,30 +4,32 @@ import parsePaginationQuery from '../../../utils/helpers/parsePaginationQuery';
 import type { RequestHandler } from 'express';
 import buildQueryConditions from '../../../utils/helpers/buildQueryConditions';
 
-type ResourceTypeQueryProps = {
-  name?: string;
-  code?: string;
+type UsersQueryProps = {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  isActive?: string;
   search?: string;
 };
 
-const getResourceTypesHandler: RequestHandler = async (req, res) => {
+const getUsersHandler: RequestHandler = async (req, res) => {
   try {
     const pagination = parsePaginationQuery(req);
 
-    const { name, code, search } = req.query as ResourceTypeQueryProps;
+    const { email, firstName, lastName, isActive, search } = req.query as UsersQueryProps;
 
     const where = buildQueryConditions({
-      fields: ['name', 'code'],
-      filters: { name, code },
+      fields: ['email', 'firstName', 'lastName'],
+      filters: { email, firstName, lastName, isActive },
       search,
     });
 
     const result = await paginateData(
-      prisma.resourceType,
+      prisma.user,
       {
         where,
-        include: {
-          resources: true,
+        omit: {
+          password: true,
         },
       },
       pagination,
@@ -39,4 +41,4 @@ const getResourceTypesHandler: RequestHandler = async (req, res) => {
   }
 };
 
-export default getResourceTypesHandler;
+export default getUsersHandler;
