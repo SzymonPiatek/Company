@@ -5,7 +5,7 @@ import app from '../../../app';
 const baseUrl = '/api/user/users/';
 
 describe('POST /users', () => {
-  const testEmail = 'testuser@example.com';
+  const testEmail = `testuser+${Date.now()}@example.com`;
 
   beforeEach(async () => {
     await prisma.user.deleteMany({ where: { email: testEmail } });
