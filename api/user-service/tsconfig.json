@@ -7,5 +7,7 @@
     "strict": true,
     "esModuleInterop": true,
     "types": ["jest", "node"]
-  }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["jest.config.ts"]
 }
