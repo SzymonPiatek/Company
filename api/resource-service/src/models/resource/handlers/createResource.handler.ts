@@ -8,7 +8,7 @@ type ResourceBodyProps = {
   typeId: string;
 };
 
-const createResourceTypeHandler: RequestHandler = async (req, res): Promise<void> => {
+const createResourceHandler: RequestHandler = async (req, res): Promise<void> => {
   try {
     const { name, description, isActive = false, typeId } = req.body as ResourceBodyProps;
 
@@ -37,4 +37,4 @@ const createResourceTypeHandler: RequestHandler = async (req, res): Promise<void
   }
 };
 
-export default createResourceTypeHandler;
+export default createResourceHandler;
