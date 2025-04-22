@@ -5,25 +5,28 @@ import app from '../../../app';
 const baseUrl = '/api/resource/resources';
 
 describe('POST /api/resource', () => {
-  const typeId = `type-${Date.now()}`;
+  const uniqueSuffix = Date.now();
+  const typeId = `type-${uniqueSuffix}`;
+  const typeName = `Test Type ${uniqueSuffix}`;
 
   beforeAll(async () => {
     await prisma.resourceType.create({
       data: {
         id: typeId,
         code: 'RES',
-        name: 'Test Type',
+        name: typeName,
       },
     });
   });
 
   afterAll(async () => {
-    await prisma.resource.deleteMany({
-      where: { typeId },
-    });
-    await prisma.resourceType.delete({
-      where: { id: typeId },
-    });
+    await prisma.resource.deleteMany({ where: { typeId } });
+
+    try {
+      await prisma.resourceType.delete({ where: { id: typeId } });
+    } catch (err) {
+      // Jeśli został już usunięty przez inny test
+    }
   });
 
   it('should create a new resource and return 201', async () => {
@@ -31,7 +34,7 @@ describe('POST /api/resource', () => {
       name: 'New Resource',
       description: 'Test description',
       isActive: true,
-      typeId: typeId,
+      typeId,
     });
 
     expect(res.status).toBe(201);
@@ -39,7 +42,7 @@ describe('POST /api/resource', () => {
       name: 'New Resource',
       description: 'Test description',
       isActive: true,
-      typeId: typeId,
+      typeId,
     });
     expect(res.body.code).toMatch(/^RES-\d{6}$/);
   });
