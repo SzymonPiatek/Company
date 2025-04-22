@@ -110,4 +110,65 @@ describe('PATCH /api/resource/resourceTypes/:id', () => {
 
     spy.mockRestore();
   });
+
+  it('should update name only if code did not change', async () => {
+    const sameCode = `SAME-${unique}`;
+    const newName = `New Name ${unique}`;
+
+    const type = await prisma.resourceType.create({
+      data: {
+        name: `Orig Name ${unique}`,
+        code: sameCode,
+      },
+    });
+
+    const res = await request(app).patch(`${baseUrl}/${type.id}`).send({
+      name: newName,
+      code: sameCode,
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      id: type.id,
+      name: newName,
+      code: sameCode,
+    });
+
+    const resources = await prisma.resource.findMany({ where: { typeId: type.id } });
+    expect(resources.length).toBe(0);
+
+    await prisma.resourceType.delete({ where: { id: type.id } });
+  });
+
+  it('should assign default numeric part if resource code is malformed', async () => {
+    const weirdCode = `STRANGE${unique}`;
+    const correctedCodePrefix = `FIXED-${unique}`;
+    const resType = await prisma.resourceType.create({
+      data: {
+        name: `Malformed ${unique}`,
+        code: weirdCode,
+        resources: {
+          create: [{ name: 'StrangeRes', code: 'BADCODE', isActive: true }],
+        },
+      },
+    });
+
+    const res = await request(app)
+      .patch(`${baseUrl}/${resType.id}`)
+      .send({
+        name: `Updated Malformed ${unique}`,
+        code: correctedCodePrefix,
+      });
+
+    expect(res.status).toBe(200);
+
+    const updatedResource = await prisma.resource.findFirst({
+      where: { typeId: resType.id },
+    });
+
+    expect(updatedResource?.code).toBe(`${correctedCodePrefix}-000001`);
+
+    await prisma.resource.deleteMany({ where: { typeId: resType.id } });
+    await prisma.resourceType.delete({ where: { id: resType.id } });
+  });
 });
