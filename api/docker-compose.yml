@@ -36,7 +36,6 @@ services:
     volumes:
       - ./apps/user-service:/usr/src/app
       - ./prisma:/usr/src/app/prisma
-      - /usr/src/app/node_modules
     env_file:
       - ../envs/.env-db
       - ../envs/.env-api
@@ -59,7 +58,6 @@ services:
     volumes:
       - ./apps/resource-service:/usr/src/app
       - ./prisma:/usr/src/app/prisma
-      - /usr/src/app/node_modules
     env_file:
       - ../envs/.env-db
       - ../envs/.env-api
