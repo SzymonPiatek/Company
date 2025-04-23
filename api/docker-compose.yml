@@ -20,6 +20,18 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    ports:
+      - "8081:80"
+    env_file:
+      - ../envs/.env-db
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+
   resource-service:
     build:
       context: ./resource-service
@@ -64,3 +76,4 @@ services:
 
 volumes:
   pgdata:
+  pgadmin-data:
