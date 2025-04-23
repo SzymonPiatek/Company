@@ -1,0 +1,17 @@
+{
+  "name": "api",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "generate": "prisma generate --schema=./prisma/schema.prisma",
+    "migrate:dev": "prisma migrate dev --schema=./prisma/schema.prisma",
+    "dev:user": "npm run dev --workspace=apps/user-service",
+    "dev:resource": "npm run dev --workspace=apps/resource-service"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "prisma": "^6.6.0"
+  }
+}

@@ -1,4 +1,87 @@
 services:
+  postgres:
+    image: postgres:15
+    restart: always
+    env_file:
+      - ../envs/.env-db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  prisma-manager:
+    build:
+      context: .
+      dockerfile: apps/prisma-manager/Dockerfile
+    working_dir: /usr/src/app
+    volumes:
+      - ./prisma:/usr/src/app/prisma
+      - ./node_modules:/usr/src/app/node_modules
+    env_file:
+      - ../envs/.env-db
+    ports:
+      - "5555:5555"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prisma.rule=PathPrefix(`/studio`)"
+      - "traefik.http.routers.prisma.entrypoints=web"
+      - "traefik.http.services.prisma.loadbalancer.server.port=5555"
+    depends_on:
+      - postgres
+    command: >
+      sh -c "
+        echo '🔄 Running Prisma Migrate...';
+        npx prisma migrate dev --schema=prisma/schema.prisma;
+    
+        echo '✅ Generating Prisma Client...';
+        npx prisma generate --schema=prisma/schema.prisma;
+    
+        echo '🚀 Starting Prisma Studio...';
+        npx prisma studio --schema=prisma/schema.prisma --port 5555
+      "
+
+  user-service:
+    build:
+      context: .
+      dockerfile: apps/user-service/Dockerfile
+    working_dir: /usr/src/app
+    volumes:
+      - ./apps/user-service:/usr/src/app
+      - ./prisma:/usr/src/app/prisma
+    env_file:
+      - ../envs/.env-db
+      - ../envs/.env-api
+    ports:
+      - "3001:3000"
+    command: ["npm", "run", "dev"]
+    depends_on:
+      - postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.user.rule=PathPrefix(`/api/user`)"
+      - "traefik.http.routers.user.entrypoints=web"
+      - "traefik.http.services.user.loadbalancer.server.port=3000"
+
+  resource-service:
+    build:
+      context: .
+      dockerfile: apps/resource-service/Dockerfile
+    working_dir: /usr/src/app
+    volumes:
+      - ./apps/resource-service:/usr/src/app
+      - ./prisma:/usr/src/app/prisma
+    env_file:
+      - ../envs/.env-db
+      - ../envs/.env-api
+    ports:
+      - "3002:3000"
+    command: ["npm", "run", "dev"]
+    depends_on:
+      - postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.resource.rule=PathPrefix(`/api/resource`)"
+      - "traefik.http.routers.resource.entrypoints=web"
+      - "traefik.http.services.resource.loadbalancer.server.port=3000"
+
   traefik:
     image: traefik:v3.0
     command:
@@ -11,56 +94,6 @@ services:
       - "8080:8080"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-
-  postgres:
-    image: postgres:15
-    restart: always
-    env_file:
-      - ../envs/.env-db
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-  resource-service:
-    build:
-      context: ./resource-service
-      dockerfile: Dockerfile
-    ports:
-      - '5555:5555'
-    volumes:
-      - ./resource-service:/usr/src/app
-      - /usr/src/app/node_modules
-    env_file:
-      - ../envs/.env-api
-      - ../envs/.env-db
-    labels:
-    - "traefik.enable=true"
-    - "traefik.http.routers.resource.rule=PathPrefix(`/api/resource`)"
-    - "traefik.http.routers.resource.entrypoints=web"
-    - "traefik.http.services.resource.loadbalancer.server.port=3000"
-    depends_on:
-      - postgres
-    command: ["sh", "-c", "npm run dev & npx prisma studio --port 5555"]
-
-  user-service:
-    build:
-      context: ./user-service
-      dockerfile: Dockerfile
-    ports:
-      - '5556:5556'
-    volumes:
-      - ./user-service:/usr/src/app
-      - /usr/src/app/node_modules
-    env_file:
-      - ../envs/.env-api
-      - ../envs/.env-db
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.user.rule=PathPrefix(`/api/user`)"
-      - "traefik.http.routers.user.entrypoints=web"
-      - "traefik.http.services.user.loadbalancer.server.port=3000"
-    depends_on:
-      - postgres
-    command: ["sh", "-c", "npm run dev & npx prisma studio --port 5556"]
 
 volumes:
   pgdata:
