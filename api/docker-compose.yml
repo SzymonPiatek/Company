@@ -45,6 +45,11 @@ services:
     command: ["npm", "run", "dev"]
     depends_on:
       - postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.user.rule=PathPrefix(`/api/user`)"
+      - "traefik.http.routers.user.entrypoints=web"
+      - "traefik.http.services.user.loadbalancer.server.port=3000"
 
   resource-service:
     build:
@@ -63,6 +68,11 @@ services:
     command: ["npm", "run", "dev"]
     depends_on:
       - postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.resource.rule=PathPrefix(`/api/resource`)"
+      - "traefik.http.routers.resource.entrypoints=web"
+      - "traefik.http.services.resource.loadbalancer.server.port=3000"
 
   traefik:
     image: traefik:v3.0
