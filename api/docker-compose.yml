@@ -26,7 +26,17 @@ services:
       - "traefik.http.services.prisma.loadbalancer.server.port=5555"
     depends_on:
       - postgres
-    command: ["npx", "prisma", "studio", "--schema=prisma/schema.prisma", "--port", "5555"]
+    command: >
+      sh -c "
+        echo '🔄 Running Prisma Migrate...';
+        npx prisma migrate dev --schema=prisma/schema.prisma;
+    
+        echo '✅ Generating Prisma Client...';
+        npx prisma generate --schema=prisma/schema.prisma;
+    
+        echo '🚀 Starting Prisma Studio...';
+        npx prisma studio --schema=prisma/schema.prisma --port 5555
+      "
 
   user-service:
     build:
