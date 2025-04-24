@@ -44,14 +44,23 @@ services:
       dockerfile: apps/user-service/Dockerfile
     working_dir: /usr/src/app
     volumes:
-      - ./apps/user-service:/usr/src/app
+      - ./apps/user-service:/usr/src/app/apps/user-service
       - ./prisma:/usr/src/app/prisma
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./apps/user-service/tsconfig.json:/usr/src/app/apps/user-service/tsconfig.json
     env_file:
       - ../envs/.env-db
       - ../envs/.env-api
     ports:
       - "3001:3000"
-    command: ["npm", "run", "dev"]
+    command: >
+      sh -c "
+        echo '✅ Generating Prisma Client...';
+        npm run generate;
+      
+        echo '🚀 Starting User Service...';
+        npm run dev:user;
+      "
     depends_on:
       - postgres
     labels:
@@ -66,14 +75,23 @@ services:
       dockerfile: apps/resource-service/Dockerfile
     working_dir: /usr/src/app
     volumes:
-      - ./apps/resource-service:/usr/src/app
+      - ./apps/user-service:/usr/src/app/apps/user-service
       - ./prisma:/usr/src/app/prisma
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./apps/user-service/tsconfig.json:/usr/src/app/apps/user-service/tsconfig.json
     env_file:
       - ../envs/.env-db
       - ../envs/.env-api
     ports:
       - "3002:3000"
-    command: ["npm", "run", "dev"]
+    command: >
+      sh -c "
+        echo '✅ Generating Prisma Client...';
+        npm run generate;
+      
+        echo '🚀 Starting Resource Service...';
+        npm run dev:resource;
+      "
     depends_on:
       - postgres
     labels:
