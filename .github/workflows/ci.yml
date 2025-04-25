@@ -32,7 +32,7 @@ jobs:
         run: docker compose -f api/docker-compose.yml ps
 
       - name: Run Prettier and Eslint check
-        run: docker compose -f api/docker-compose.yml exec test-manager npm run format:check && npm run lint
+        run: docker compose -f api/docker-compose.yml exec test-manager sh -c "npm run format:check && npm run lint"
 
       - name: Prisma Migrations via prisma-manager
         run: |
