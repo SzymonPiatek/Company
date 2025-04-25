@@ -21,7 +21,7 @@ jobs:
 
       - name: Create env files from GitHub Secrets
         run: |
-          mkdir -p api/envs
+          mkdir -p envs
           echo "${{ secrets.ENV_DB }}" > envs/.env-db
           echo "${{ secrets.ENV_API }}" > envs/.env-api
 
@@ -32,11 +32,24 @@ jobs:
       - name: Wait for containers to be ready
         run: |
           echo "⏳ Waiting for services to boot..."
-          sleep 30
+          sleep 10
 
-      - name: Run Prisma Migrations (via prisma-manager)
+      - name: Run Prisma Migrations with retries
         run: |
-          docker compose -f api/docker-compose.yml exec prisma-manager npx prisma migrate dev --schema=prisma/schema.prisma
+          for i in {1..10}; do
+            echo "⏳ Attempt $i: Running Prisma Migrate..."
+            if docker compose -f api/docker-compose.yml exec prisma-manager npx prisma migrate dev --schema=prisma/schema.prisma; then
+              echo "✅ Prisma Migrate successful!"
+              break
+            else
+              echo "❗ Prisma Migrate failed, retrying in 5 seconds..."
+              sleep 5
+            fi
+            if [ $i -eq 10 ]; then
+              echo "❌ Prisma Migrate failed after 10 attempts. Exiting."
+              exit 1
+            fi
+          done
 
       - name: Run Tests inside test-manager
         run: |
