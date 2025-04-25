@@ -106,6 +106,36 @@ services:
       - "traefik.http.routers.resource.entrypoints=web"
       - "traefik.http.services.resource.loadbalancer.server.port=3000"
 
+  test-manager:
+    build:
+      context: .
+      dockerfile: apps/test-manager/Dockerfile
+    working_dir: /usr/src/app
+    volumes:
+      - ./apps:/usr/src/app/apps
+      - ./libs:/usr/src/app/libs
+      - ./prisma:/usr/src/app/prisma
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./tsconfig.base.json:/usr/src/app/tsconfig.base.json
+      - ./package.json:/usr/src/app/package.json
+      - ./package-lock.json:/usr/src/app/package-lock.json
+      - ./jest.config.base.ts:/usr/src/app/jest.config.base.ts
+    env_file:
+      - ../envs/.env-api
+      - ../envs/.env-db
+    depends_on:
+      - postgres
+      - user-service
+      - resource-service
+      - prisma-manager
+    command: >
+      sh -c "
+        npm install &&
+        sh
+      "
+    tty: true
+    stdin_open: true
+
   traefik:
     image: traefik:v3.0
     command:
