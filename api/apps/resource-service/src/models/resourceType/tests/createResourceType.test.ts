@@ -9,7 +9,7 @@ describe("POST /api/resource/resourceTypes", () => {
   const name = `TypeName ${unique}`;
   const code = `CODE-${unique}`;
 
-  afterAll(async () => {
+  afterEach(async () => {
     await prisma.resourceType.deleteMany({
       where: {
         OR: [{ name }, { code }],
@@ -25,6 +25,8 @@ describe("POST /api/resource/resourceTypes", () => {
   });
 
   it("should return 404 if name already exists", async () => {
+    await request(app).post(baseUrl).send({ name, code });
+
     const res = await request(app)
       .post(baseUrl)
       .send({
@@ -37,6 +39,8 @@ describe("POST /api/resource/resourceTypes", () => {
   });
 
   it("should return 404 if code already exists", async () => {
+    await request(app).post(baseUrl).send({ name, code });
+
     const res = await request(app)
       .post(baseUrl)
       .send({
