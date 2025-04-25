@@ -45,7 +45,7 @@ jobs:
             fi
           done
 
-      - name: Run Tests tests via test-manager
+      - name: Run Tests via test-manager
         run: docker compose -f api/docker-compose.yml exec test-manager npm run test:all
 
       - name: Teardown (docker-compose down)
