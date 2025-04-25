@@ -9,38 +9,38 @@ on:
       - main
 
 jobs:
-  build-test:
+  full-docker-compose-ci:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:15
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: mydb
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    defaults:
+      run:
+        working-directory: api
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
+      - name: Check Docker Compose version
+        run: docker compose version
 
-      - name: Install dependencies
-        run: npm install
+      - name: Build and Start Full Stack
+        run: |
+          docker compose up -d --build
 
-      - name: Generate Prisma Client
-        run: npm run generate
+      - name: Wait for containers to be ready
+        run: |
+          echo "⏳ Waiting for services to boot..."
+          sleep 30
 
-      - name: Run Tests with Coverage
-        run: npm run test:all
+      - name: Run Prisma Migrations (via prisma-manager)
+        run: |
+          docker compose exec prisma-manager npx prisma migrate dev --schema=prisma/schema.prisma
+
+      - name: Run Tests inside test-manager
+        run: |
+          docker compose exec test-manager npm run test:all
+
+      - name: Shutdown docker-compose
+        if: always()
+        run: |
+          docker compose down -v
