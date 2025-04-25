@@ -1,2 +1,29 @@
-#!/usr/bin/env sh
-. "$(dirname "$0")/h"
+echo "🚀 Uruchamianie pre-push sprawdzeń przez test-manager..."
+
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+run_check() {
+  local name=$1
+  local script=$2
+
+  echo ""
+  echo "🔵 Sprawdzam ${name}..."
+
+  docker compose -f api/docker-compose.yml run --rm -T test-manager npm run "$script" > /dev/null 2>&1
+  status=$?
+
+  if [ $status -eq 0 ]; then
+    echo "${GREEN}✅ ${name} passed${NC}"
+  else
+    echo "${RED}❌ ${name} failed${NC}"
+    exit 1
+  fi
+}
+
+run_check "Formatowanie kodu (Prettier)" "format:check"
+run_check "Lintowanie kodu (ESLint)" "lint"
+
+echo ""
+echo "${GREEN}🏆 Wszystkie sprawdzenia zakończone sukcesem! Pushuję.${NC}"
