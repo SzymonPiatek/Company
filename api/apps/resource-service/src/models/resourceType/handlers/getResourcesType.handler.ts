@@ -4,7 +4,7 @@ import prisma from '../../../prismaClient';
 import paginateData from '@libs/helpers/paginateData';
 import parsePaginationQuery from '@libs//helpers/parsePaginationQuery';
 import buildQueryConditions from '@libs/helpers/buildQueryConditions';
-import buildOrderBy from '@libs/helpers/buildSortConditions';
+import buildOrderBy from '@libs/helpers/buildOrderBy';
 
 type ResourceTypeQueryProps = {
   name?: string;

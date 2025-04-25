@@ -15,6 +15,21 @@ export function buildOrderBy<T>({
 }: BuildOrderByOptions<T>) {
   if (!sortBy) return {};
 
+  const [relation, field] = sortBy.split(".");
+
+  if (relation && field) {
+    const allowedFieldsForRelation = allowedRelations[relation];
+
+    if (
+      !allowedFieldsForRelation ||
+      !allowedFieldsForRelation.includes(field)
+    ) {
+      return {};
+    }
+
+    return { [relation]: { [field]: sortOrder } };
+  }
+
   const isFieldAllowed =
     allowedFields.length === 0 || allowedFields.includes(sortBy as keyof T);
 
@@ -22,17 +37,7 @@ export function buildOrderBy<T>({
     return { [sortBy]: sortOrder };
   }
 
-  const [relation, field] = sortBy.split(".");
-
-  if (relation && field) {
-    const allowedFieldsForRelation = allowedRelations[relation];
-
-    if (allowedFieldsForRelation && allowedFieldsForRelation.includes(field)) {
-      return { [relation]: { [field]: sortOrder } };
-    }
-  }
-
-  return undefined;
+  return {};
 }
 
 export default buildOrderBy;
