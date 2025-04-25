@@ -1,8 +1,10 @@
 import prisma from '../../../prismaClient';
-import paginateData from '../../../utils/helpers/paginateData';
-import parsePaginationQuery from '../../../utils/helpers/parsePaginationQuery';
 import type { RequestHandler } from 'express';
-import buildQueryConditions from '../../../utils/helpers/buildQueryConditions';
+import type { Resource } from '@prisma/client';
+import parsePaginationQuery from '@libs/helpers/parsePaginationQuery';
+import buildQueryConditions from '@libs/helpers/buildQueryConditions';
+import paginateData from '@libs/helpers/paginateData';
+import buildOrderBy from '@libs/helpers/buildOrderBy';
 
 type ResourcesQueryProps = {
   name?: string;
@@ -16,6 +18,15 @@ const getResourcesHandler: RequestHandler = async (req, res) => {
   try {
     const pagination = parsePaginationQuery(req);
 
+    const orderBy = buildOrderBy<Resource>({
+      sortBy: pagination.sortBy,
+      sortOrder: pagination.sortOrder,
+      allowedFields: ['id', 'name', 'code', 'description', 'isActive', 'typeId', 'createdAt', 'updatedAt'],
+      allowedRelations: {
+        type: ['id', 'name', 'code', 'createdAt', 'updatedAt'],
+      },
+    });
+
     const { name, code, description, isActive, search } = req.query as ResourcesQueryProps;
 
     const where = buildQueryConditions({
@@ -28,6 +39,7 @@ const getResourcesHandler: RequestHandler = async (req, res) => {
       prisma.resource,
       {
         where,
+        orderBy,
         include: { type: true },
       },
       pagination,

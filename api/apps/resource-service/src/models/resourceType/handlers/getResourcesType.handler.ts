@@ -1,8 +1,10 @@
-import prisma from '../../../prismaClient';
-import paginateData from '../../../utils/helpers/paginateData';
-import parsePaginationQuery from '../../../utils/helpers/parsePaginationQuery';
 import type { RequestHandler } from 'express';
-import buildQueryConditions from '../../../utils/helpers/buildQueryConditions';
+import type { ResourceType } from '@prisma/client';
+import prisma from '../../../prismaClient';
+import paginateData from '@libs/helpers/paginateData';
+import parsePaginationQuery from '@libs//helpers/parsePaginationQuery';
+import buildQueryConditions from '@libs/helpers/buildQueryConditions';
+import buildOrderBy from '@libs/helpers/buildOrderBy';
 
 type ResourceTypeQueryProps = {
   name?: string;
@@ -13,6 +15,12 @@ type ResourceTypeQueryProps = {
 const getResourceTypesHandler: RequestHandler = async (req, res) => {
   try {
     const pagination = parsePaginationQuery(req);
+
+    const orderBy = buildOrderBy<ResourceType>({
+      sortBy: pagination.sortBy,
+      sortOrder: pagination.sortOrder,
+      allowedFields: ['id', 'name', 'code', 'createdAt', 'updatedAt'],
+    });
 
     const { name, code, search } = req.query as ResourceTypeQueryProps;
 
@@ -26,6 +34,7 @@ const getResourceTypesHandler: RequestHandler = async (req, res) => {
       prisma.resourceType,
       {
         where,
+        orderBy,
         include: {
           resources: true,
         },

@@ -1,13 +1,12 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "CommonJS",
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "strict": true,
-    "esModuleInterop": true,
-    "types": ["jest", "node"]
+    "outDir": "dist",
+    "rootDir": "../../",
+    "baseUrl": "../../",
+    "paths": {
+      "@libs/*": ["libs/*"]
+    }
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["jest.config.ts"]
+  "include": ["apps/user-service/src", "libs"]
 }

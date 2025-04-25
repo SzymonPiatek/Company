@@ -44,14 +44,25 @@ services:
       dockerfile: apps/user-service/Dockerfile
     working_dir: /usr/src/app
     volumes:
-      - ./apps/user-service:/usr/src/app
       - ./prisma:/usr/src/app/prisma
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./tsconfig.base.json:/usr/src/app/tsconfig.base.json
+      - ./apps/user-service:/usr/src/app/apps/user-service
+      - ./apps/user-service/tsconfig.json:/usr/src/app/apps/user-service/tsconfig.json
+      - ./libs:/usr/src/app/libs
     env_file:
       - ../envs/.env-db
       - ../envs/.env-api
     ports:
       - "3001:3000"
-    command: ["npm", "run", "dev"]
+    command: >
+      sh -c "
+        echo '✅ Generating Prisma Client...';
+        npm run generate;
+      
+        echo '🚀 Starting User Service...';
+        npm run dev:user;
+      "
     depends_on:
       - postgres
     labels:
@@ -66,14 +77,25 @@ services:
       dockerfile: apps/resource-service/Dockerfile
     working_dir: /usr/src/app
     volumes:
-      - ./apps/resource-service:/usr/src/app
       - ./prisma:/usr/src/app/prisma
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./tsconfig.base.json:/usr/src/app/tsconfig.base.json
+      - ./apps/resource-service:/usr/src/app/apps/resource-service
+      - ./apps/resource-service/tsconfig.json:/usr/src/app/apps/resource-service/tsconfig.json
+      - ./libs:/usr/src/app/libs
     env_file:
       - ../envs/.env-db
       - ../envs/.env-api
     ports:
       - "3002:3000"
-    command: ["npm", "run", "dev"]
+    command: >
+      sh -c "
+        echo '✅ Generating Prisma Client...';
+        npm run generate;
+      
+        echo '🚀 Starting Resource Service...';
+        npm run dev:resource;
+      "
     depends_on:
       - postgres
     labels:
@@ -81,6 +103,36 @@ services:
       - "traefik.http.routers.resource.rule=PathPrefix(`/api/resource`)"
       - "traefik.http.routers.resource.entrypoints=web"
       - "traefik.http.services.resource.loadbalancer.server.port=3000"
+
+  test-manager:
+    build:
+      context: .
+      dockerfile: apps/test-manager/Dockerfile
+    working_dir: /usr/src/app
+    volumes:
+      - ./apps:/usr/src/app/apps
+      - ./libs:/usr/src/app/libs
+      - ./prisma:/usr/src/app/prisma
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./tsconfig.base.json:/usr/src/app/tsconfig.base.json
+      - ./package.json:/usr/src/app/package.json
+      - ./package-lock.json:/usr/src/app/package-lock.json
+      - ./jest.config.ts:/usr/src/app/jest.config.ts
+    env_file:
+      - ../envs/.env-api
+      - ../envs/.env-db
+    depends_on:
+      - postgres
+      - user-service
+      - resource-service
+      - prisma-manager
+    command: >
+      sh -c "
+        npm install &&
+        sh
+      "
+    tty: true
+    stdin_open: true
 
   traefik:
     image: traefik:v3.0
