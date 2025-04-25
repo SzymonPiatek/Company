@@ -1,4 +1,4 @@
-import type { PaginationParams, PaginationResult } from "@libs/types/types";
+import type { PaginationParams, PaginationResult } from "../types/types";
 
 async function paginateData<T>(
   model: any,

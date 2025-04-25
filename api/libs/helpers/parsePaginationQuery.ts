@@ -1,5 +1,5 @@
 import type { Request } from "express";
-import type { PaginationParams } from "@libs/types/types";
+import type { PaginationParams } from "../types/types";
 
 const parsePaginationQuery = (req: Request): PaginationParams => {
   const page = parseInt(req.query.page as string, 10);

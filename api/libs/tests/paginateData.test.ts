@@ -1,4 +1,4 @@
-import paginateData from "@libs/helpers/paginateData";
+import paginateData from "../helpers/paginateData";
 
 describe("paginateData", () => {
   const mockModel = {
