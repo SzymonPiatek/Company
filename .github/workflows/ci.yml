@@ -22,8 +22,8 @@ jobs:
       - name: Create env files from GitHub Secrets
         run: |
           mkdir -p api/envs
-          echo "${{ secrets.ENV_DB }}" > api/envs/.env-db
-          echo "${{ secrets.ENV_API }}" > api/envs/.env-api
+          echo "${{ secrets.ENV_DB }}" > envs/.env-db
+          echo "${{ secrets.ENV_API }}" > envs/.env-api
 
       - name: Build and Start Full Stack
         run: |
