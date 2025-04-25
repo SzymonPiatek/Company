@@ -5,8 +5,9 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 COPY prisma ./prisma
-COPY apps/user-service ./apps/user-service
 COPY tsconfig.json ./
+COPY tsconfig.base.json ./
+COPY apps/user-service ./apps/user-service
 COPY apps/user-service/tsconfig.json ./apps/user-service/tsconfig.json
 
 RUN npm install

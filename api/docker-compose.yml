@@ -44,9 +44,10 @@ services:
       dockerfile: apps/user-service/Dockerfile
     working_dir: /usr/src/app
     volumes:
-      - ./apps/user-service:/usr/src/app/apps/user-service
       - ./prisma:/usr/src/app/prisma
       - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./tsconfig.base.json:/usr/src/app/tsconfig.base.json
+      - ./apps/user-service:/usr/src/app/apps/user-service
       - ./apps/user-service/tsconfig.json:/usr/src/app/apps/user-service/tsconfig.json
     env_file:
       - ../envs/.env-db
@@ -75,9 +76,10 @@ services:
       dockerfile: apps/resource-service/Dockerfile
     working_dir: /usr/src/app
     volumes:
-      - ./apps/user-service:/usr/src/app/apps/user-service
       - ./prisma:/usr/src/app/prisma
       - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./tsconfig.base.json:/usr/src/app/tsconfig.base.json
+      - ./apps/user-service:/usr/src/app/apps/user-service
       - ./apps/user-service/tsconfig.json:/usr/src/app/apps/user-service/tsconfig.json
     env_file:
       - ../envs/.env-db
