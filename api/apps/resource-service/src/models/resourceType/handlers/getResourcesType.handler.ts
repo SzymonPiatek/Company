@@ -1,8 +1,8 @@
 import prisma from '../../../prismaClient';
-import paginateData from '../../../utils/helpers/paginateData';
-import parsePaginationQuery from '../../../utils/helpers/parsePaginationQuery';
+import paginateData from '@libs/helpers/paginateData';
+import parsePaginationQuery from '@libs//helpers/parsePaginationQuery';
 import type { RequestHandler } from 'express';
-import buildQueryConditions from '../../../utils/helpers/buildQueryConditions';
+import buildQueryConditions from '@libs/helpers/buildQueryConditions';
 
 type ResourceTypeQueryProps = {
   name?: string;
