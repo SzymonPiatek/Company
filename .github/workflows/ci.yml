@@ -12,10 +12,6 @@ jobs:
   full-docker-compose-ci:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: api
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,7 +21,7 @@ jobs:
 
       - name: Build and Start Full Stack
         run: |
-          docker compose up -d --build
+          docker compose -f api/docker-compose.yml up -d --build
 
       - name: Wait for containers to be ready
         run: |
@@ -34,13 +30,13 @@ jobs:
 
       - name: Run Prisma Migrations (via prisma-manager)
         run: |
-          docker compose exec prisma-manager npx prisma migrate dev --schema=prisma/schema.prisma
+          docker compose -f api/docker-compose.yml exec prisma-manager npx prisma migrate dev --schema=prisma/schema.prisma
 
       - name: Run Tests inside test-manager
         run: |
-          docker compose exec test-manager npm run test:all
+          docker compose -f api/docker-compose.yml exec test-manager npm run test:all
 
       - name: Shutdown docker-compose
         if: always()
         run: |
-          docker compose down -v
+          docker compose -f api/docker-compose.yml down -v
