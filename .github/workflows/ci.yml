@@ -1,0 +1,55 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  full-docker-compose-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Docker Compose version
+        run: docker compose version
+
+      - name: Create env files from GitHub Secrets
+        run: |
+          mkdir -p envs
+          echo "${{ secrets.ENV_DB }}" > envs/.env-db
+          echo "${{ secrets.ENV_API }}" > envs/.env-api
+
+      - name: Build and Start Full Stack
+        run: docker compose -f api/docker-compose.yml up -d --build
+
+      - name: Show container status
+        run: docker compose -f api/docker-compose.yml ps
+
+      - name: Run Prettier and Eslint check
+        run: docker compose -f api/docker-compose.yml exec test-manager sh -c "npm run format:check && npm run lint"
+
+      - name: Prisma Migrations via prisma-manager
+        run: |
+          for i in {1..5}; do
+            echo "Attempt $i: Running Prisma Migrate..."
+            docker compose -f api/docker-compose.yml exec prisma-manager npx prisma migrate dev --schema=prisma/schema.prisma && break
+            echo "Prisma Migrate failed, retrying in 5 seconds..."
+            sleep 5
+            if [ "$i" -eq 10 ]; then
+              echo "Prisma Migrate failed after 10 attempts."
+              exit 1
+            fi
+          done
+
+      - name: Run Tests via test-manager
+        run: docker compose -f api/docker-compose.yml exec test-manager npm run test:all
+
+      - name: Teardown (docker-compose down)
+        if: always()
+        run: docker compose -f api/docker-compose.yml down -v

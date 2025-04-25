@@ -2,7 +2,7 @@ import parsePaginationQuery from "../helpers/parsePaginationQuery";
 import type { Request } from "express";
 
 describe("parsePaginationQuery", () => {
-  const mockReq = (query: any): Partial<Request> => ({
+  const mockReq = (query: Record<string, string>): Partial<Request> => ({
     query,
   });
 

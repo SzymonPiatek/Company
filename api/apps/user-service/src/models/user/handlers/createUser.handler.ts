@@ -1,6 +1,6 @@
-import type { RequestHandler } from 'express';
-import prisma from '../../../prismaClient';
-import { hashPassword } from '@libs/helpers/bcrypt';
+import type { RequestHandler } from "express";
+import prisma from "../../../prismaClient";
+import { hashPassword } from "@libs/helpers/bcrypt";
 
 type UserBodyProps = {
   email: string;
@@ -16,7 +16,7 @@ const createUserHandler: RequestHandler = async (req, res) => {
     const isEmailExists = await prisma.user.findUnique({ where: { email } });
 
     if (isEmailExists) {
-      res.status(409).json({ error: 'User with this email already exists' });
+      res.status(409).json({ error: "User with this email already exists" });
       return;
     }
 
@@ -36,7 +36,7 @@ const createUserHandler: RequestHandler = async (req, res) => {
 
     res.status(201).json(newUser);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create user', details: error });
+    res.status(500).json({ error: "Failed to create user", details: error });
   }
 };
 
