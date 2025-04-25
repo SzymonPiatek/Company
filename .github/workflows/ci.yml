@@ -26,15 +26,13 @@ jobs:
           echo "${{ secrets.ENV_API }}" > envs/.env-api
 
       - name: Build and Start Full Stack
-        run: |
-          docker compose -f api/docker-compose.yml up -d --build
+        run: docker compose -f api/docker-compose.yml up -d --build
 
       - name: Show container status
         run: docker compose -f api/docker-compose.yml ps
 
       - name: Run Prettier format check
-        run: |
-          docker compose -f api/docker-compose.yml exec test-manager npm run format:check
+        run: docker compose -f api/docker-compose.yml exec test-manager npm run format:check
 
       - name: Prisma Migrations via prisma-manager
         run: |
