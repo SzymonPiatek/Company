@@ -1,8 +1,10 @@
-import prisma from '../../../prismaClient';
 import type { RequestHandler } from 'express';
+import type { User } from '@prisma/client';
+import prisma from '../../../prismaClient';
 import parsePaginationQuery from '@libs/helpers/parsePaginationQuery';
 import paginateData from '@libs/helpers/paginateData';
 import buildQueryConditions from '@libs/helpers/buildQueryConditions';
+import buildOrderBy from '@libs/helpers/buildSortConditions';
 
 type UsersQueryProps = {
   email?: string;
@@ -16,6 +18,12 @@ const getUsersHandler: RequestHandler = async (req, res) => {
   try {
     const pagination = parsePaginationQuery(req);
 
+    const orderBy = buildOrderBy<User>({
+      sortBy: pagination.sortBy,
+      sortOrder: pagination.sortOrder,
+      allowedFields: ['id', 'email', 'firstName', 'lastName', 'isActive', 'createdAt', 'updatedAt'],
+    });
+
     const { email, firstName, lastName, isActive, search } = req.query as UsersQueryProps;
 
     const where = buildQueryConditions({
@@ -28,6 +36,7 @@ const getUsersHandler: RequestHandler = async (req, res) => {
       prisma.user,
       {
         where,
+        orderBy,
         omit: {
           password: true,
         },

@@ -23,7 +23,7 @@ const getResourcesHandler: RequestHandler = async (req, res) => {
       sortOrder: pagination.sortOrder,
       allowedFields: ['id', 'name', 'code', 'description', 'isActive', 'typeId', 'createdAt', 'updatedAt'],
       allowedRelations: {
-        type: ['id', 'name', 'code'],
+        type: ['id', 'name', 'code', 'createdAt', 'updatedAt'],
       },
     });
 
@@ -39,7 +39,7 @@ const getResourcesHandler: RequestHandler = async (req, res) => {
       prisma.resource,
       {
         where,
-        ...(orderBy ? { orderBy } : {}),
+        orderBy,
         include: { type: true },
       },
       pagination,

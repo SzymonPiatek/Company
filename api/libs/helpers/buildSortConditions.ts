@@ -13,7 +13,7 @@ export function buildOrderBy<T>({
   allowedFields = [] as (keyof T)[],
   allowedRelations = {},
 }: BuildOrderByOptions<T>) {
-  if (!sortBy) return undefined;
+  if (!sortBy) return {};
 
   const isFieldAllowed =
     allowedFields.length === 0 || allowedFields.includes(sortBy as keyof T);
