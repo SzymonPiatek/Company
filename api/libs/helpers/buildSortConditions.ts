@@ -1,21 +1,21 @@
 import { SortOrder } from "../types/types";
 
-type BuildOrderByOptions = {
+type BuildOrderByOptions<T> = {
   sortBy?: string;
   sortOrder?: SortOrder;
-  allowedFields: string[];
+  allowedFields?: (keyof T)[];
   allowedRelations?: string[];
 };
 
-export function buildOrderBy({
+export function buildOrderBy<T>({
   sortBy,
-  sortOrder,
-  allowedFields,
+  sortOrder = "asc",
+  allowedFields = [] as (keyof T)[],
   allowedRelations = [],
-}: BuildOrderByOptions) {
+}: BuildOrderByOptions<T>) {
   if (!sortBy) return undefined;
 
-  if (allowedFields.includes(sortBy)) {
+  if (allowedFields.includes(sortBy as keyof T)) {
     return { [sortBy]: sortOrder };
   }
 

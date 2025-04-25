@@ -20,7 +20,7 @@ const getResourcesHandler: RequestHandler = async (req, res) => {
     const orderBy = buildOrderBy({
       sortBy: pagination.sortBy,
       sortOrder: pagination.sortOrder,
-      allowedFields: ['name', 'code'],
+      allowedFields: ['id', 'name', 'code', 'description', 'isActive', 'typeId', 'createdAt', 'updatedAt'],
       allowedRelations: ['type'],
     });
 
