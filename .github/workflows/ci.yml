@@ -29,33 +29,25 @@ jobs:
         run: |
           docker compose -f api/docker-compose.yml up -d --build
 
-      - name: Wait for containers to be ready
-        run: |
-          echo "⏳ Waiting for services to boot..."
-          sleep 10
+      - name: Show container status
+        run: docker compose -f api/docker-compose.yml ps
 
-      - name: Run Prisma Migrations with retries
+      - name: Retry Prisma Migrations via prisma-manager
         run: |
           for i in {1..10}; do
             echo "⏳ Attempt $i: Running Prisma Migrate..."
-            if docker compose -f api/docker-compose.yml exec prisma-manager npx prisma migrate dev --schema=prisma/schema.prisma; then
-              echo "✅ Prisma Migrate successful!"
-              break
-            else
-              echo "❗ Prisma Migrate failed, retrying in 5 seconds..."
-              sleep 5
-            fi
-            if [ $i -eq 10 ]; then
-              echo "❌ Prisma Migrate failed after 10 attempts. Exiting."
+            docker compose -f api/docker-compose.yml exec prisma-manager npx prisma migrate dev --schema=prisma/schema.prisma && break
+            echo "❗ Prisma Migrate failed, retrying in 5 seconds..."
+            sleep 5
+            if [ "$i" -eq 10 ]; then
+              echo "❌ Prisma Migrate failed after 10 attempts."
               exit 1
             fi
           done
 
       - name: Run Tests inside test-manager
-        run: |
-          docker compose -f api/docker-compose.yml exec test-manager npm run test:all
+        run: docker compose -f api/docker-compose.yml exec test-manager npm run test:all
 
-      - name: Shutdown docker-compose
+      - name: Teardown (docker-compose down)
         if: always()
-        run: |
-          docker compose -f api/docker-compose.yml down -v
+        run: docker compose -f api/docker-compose.yml down -v
