@@ -3,6 +3,7 @@ import type { RequestHandler } from 'express';
 import parsePaginationQuery from '@libs/helpers/parsePaginationQuery';
 import buildQueryConditions from '@libs/helpers/buildQueryConditions';
 import paginateData from '@libs/helpers/paginateData';
+import buildOrderBy from '@libs/helpers/buildSortConditions';
 
 type ResourcesQueryProps = {
   name?: string;
@@ -16,6 +17,13 @@ const getResourcesHandler: RequestHandler = async (req, res) => {
   try {
     const pagination = parsePaginationQuery(req);
 
+    const orderBy = buildOrderBy({
+      sortBy: pagination.sortBy,
+      sortOrder: pagination.sortOrder,
+      allowedFields: ['name', 'code'],
+      allowedRelations: ['type'],
+    });
+
     const { name, code, description, isActive, search } = req.query as ResourcesQueryProps;
 
     const where = buildQueryConditions({
@@ -28,6 +36,7 @@ const getResourcesHandler: RequestHandler = async (req, res) => {
       prisma.resource,
       {
         where,
+        ...(orderBy ? { orderBy } : {}),
         include: { type: true },
       },
       pagination,
