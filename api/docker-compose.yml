@@ -120,6 +120,7 @@ services:
       - ./package.json:/usr/src/app/package.json
       - ./package-lock.json:/usr/src/app/package-lock.json
       - ./jest.config.base.ts:/usr/src/app/jest.config.base.ts
+      - ./jest.config.ts:/usr/src/app/jest.config.ts
     env_file:
       - ../envs/.env-api
       - ../envs/.env-db
