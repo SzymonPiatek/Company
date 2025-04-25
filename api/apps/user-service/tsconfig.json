@@ -1,10 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "types": ["jest", "node"]
+    "outDir": "dist",
+    "rootDir": "../../",
+    "baseUrl": "../../",
+    "paths": {
+      "@libs/*": ["libs/*"]
+    }
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["jest.config.ts"]
+  "include": ["apps/user-service/src", "libs"]
 }

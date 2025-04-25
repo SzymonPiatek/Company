@@ -49,6 +49,7 @@ services:
       - ./tsconfig.base.json:/usr/src/app/tsconfig.base.json
       - ./apps/user-service:/usr/src/app/apps/user-service
       - ./apps/user-service/tsconfig.json:/usr/src/app/apps/user-service/tsconfig.json
+      - ./libs:/usr/src/app/libs
     env_file:
       - ../envs/.env-db
       - ../envs/.env-api
@@ -79,8 +80,9 @@ services:
       - ./prisma:/usr/src/app/prisma
       - ./tsconfig.json:/usr/src/app/tsconfig.json
       - ./tsconfig.base.json:/usr/src/app/tsconfig.base.json
-      - ./apps/user-service:/usr/src/app/apps/user-service
-      - ./apps/user-service/tsconfig.json:/usr/src/app/apps/user-service/tsconfig.json
+      - ./apps/resource-service:/usr/src/app/apps/resource-service
+      - ./apps/resource-service/tsconfig.json:/usr/src/app/apps/resource-service/tsconfig.json
+      - ./libs:/usr/src/app/libs
     env_file:
       - ../envs/.env-db
       - ../envs/.env-api

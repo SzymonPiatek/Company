@@ -1,6 +1,6 @@
-import { RequestHandler } from 'express';
+import type { RequestHandler } from 'express';
 import prisma from '../../../prismaClient';
-import { comparePassword } from '../../../utils/helpers/bcrypt';
+import { comparePassword } from '@libs/helpers/bcrypt';
 
 type LoginBodyProps = {
   email: string;

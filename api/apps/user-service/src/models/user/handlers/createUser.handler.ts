@@ -1,6 +1,6 @@
 import type { RequestHandler } from 'express';
 import prisma from '../../../prismaClient';
-import { hashPassword } from '../../../utils/helpers/bcrypt';
+import { hashPassword } from '@libs/helpers/bcrypt';
 
 type UserBodyProps = {
   email: string;

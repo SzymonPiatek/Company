@@ -1,5 +1,5 @@
-import type { Request } from 'express';
-import type { PaginationParams } from '../types/types';
+import type { Request } from "express";
+import type { PaginationParams } from "@libs/types/types";
 
 const parsePaginationQuery = (req: Request): PaginationParams => {
   const page = parseInt(req.query.page as string, 10);
@@ -7,7 +7,8 @@ const parsePaginationQuery = (req: Request): PaginationParams => {
   const sortBy = req.query.sortBy as string;
   const rawOrder = (req.query.sortOrder as string)?.toLowerCase();
 
-  const sortOrder: 'asc' | 'desc' | undefined = rawOrder === 'desc' ? 'desc' : rawOrder === 'asc' ? 'asc' : undefined;
+  const sortOrder: "asc" | "desc" | undefined =
+    rawOrder === "desc" ? "desc" : rawOrder === "asc" ? "asc" : undefined;
 
   return {
     page: !isNaN(page) && page > 0 ? page : 1,
