@@ -1,4 +1,4 @@
-## 📋 Pull Request Summary
+## 📋 Podsumowanie wprowadzanych zmian
 
 ---
 
