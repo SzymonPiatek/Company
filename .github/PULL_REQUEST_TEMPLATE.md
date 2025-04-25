@@ -2,12 +2,16 @@
 
 ---
 
-## Zmiany:
+### Zmiany:
 
-Opisz wprowadzone zmiany
+    Opisz wprowadzone zmiany
 
-## Testy:
+---
+
+### Testy:
 
 - [ ] Wszystkie testy przechodzą
 - [ ] Zaktualizowano testy
 - [ ] Zaktualizowano kolekcję w Postmanie
+
+---
