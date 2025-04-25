@@ -32,20 +32,20 @@ jobs:
       - name: Show container status
         run: docker compose -f api/docker-compose.yml ps
 
-      - name: Retry Prisma Migrations via prisma-manager
+      - name: Prisma Migrations via prisma-manager
         run: |
-          for i in {1..10}; do
-            echo "⏳ Attempt $i: Running Prisma Migrate..."
+          for i in {1..5}; do
+            echo "Attempt $i: Running Prisma Migrate..."
             docker compose -f api/docker-compose.yml exec prisma-manager npx prisma migrate dev --schema=prisma/schema.prisma && break
-            echo "❗ Prisma Migrate failed, retrying in 5 seconds..."
+            echo "Prisma Migrate failed, retrying in 5 seconds..."
             sleep 5
             if [ "$i" -eq 10 ]; then
-              echo "❌ Prisma Migrate failed after 10 attempts."
+              echo "Prisma Migrate failed after 10 attempts."
               exit 1
             fi
           done
 
-      - name: Run Tests inside test-manager
+      - name: Run Tests tests via test-manager
         run: docker compose -f api/docker-compose.yml exec test-manager npm run test:all
 
       - name: Teardown (docker-compose down)
