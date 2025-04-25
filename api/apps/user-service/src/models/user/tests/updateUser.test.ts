@@ -6,6 +6,13 @@ import { comparePassword, hashPassword } from '@libs/helpers/bcrypt';
 const baseUrl = (id: string) => `/api/user/users/${id}`;
 
 describe('PATCH /users/:id', () => {
+  beforeAll(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterAll(() => {
+    (console.error as jest.Mock).mockRestore();
+  });
   let testUser: any;
 
   beforeAll(async () => {
