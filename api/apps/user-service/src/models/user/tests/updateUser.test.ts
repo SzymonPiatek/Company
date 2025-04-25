@@ -1,7 +1,7 @@
 import request from 'supertest';
 import prisma from '../../../prismaClient';
 import app from '../../../app';
-import { comparePassword, hashPassword } from '../../../utils/helpers/bcrypt';
+import { comparePassword, hashPassword } from '@libs/helpers/bcrypt';
 
 const baseUrl = (id: string) => `/api/user/users/${id}`;
 

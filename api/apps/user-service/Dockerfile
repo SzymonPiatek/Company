@@ -8,6 +8,7 @@ COPY prisma ./prisma
 COPY tsconfig.json ./
 COPY tsconfig.base.json ./
 COPY tsconfig.paths.json ./tsconfig.paths.json
+COPY jest.config.base.ts ./jest.config.base.ts
 COPY apps/user-service ./apps/user-service
 COPY apps/user-service/tsconfig.json ./apps/user-service/tsconfig.json
 COPY libs ./libs
