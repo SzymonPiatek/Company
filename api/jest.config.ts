@@ -1,7 +1,15 @@
-import base from "./jest.config.base";
-
 export default {
-  ...base,
+  testEnvironment: "node",
+  moduleFileExtensions: ["ts", "js", "json"],
+  transform: {
+    "^.+\\.ts$": ["ts-jest", { tsconfig: "tsconfig.json" }],
+  },
+  moduleNameMapper: {
+    "^@libs/(.*)$": "<rootDir>/libs/$1",
+  },
   rootDir: "./",
-  testMatch: ["<rootDir>/libs/tests/**/*.test.ts"],
+  testMatch: [
+    "<rootDir>/libs/tests/**/*.test.ts",
+    "<rootDir>/apps/**/src/**/tests/**/*.test.ts",
+  ],
 };

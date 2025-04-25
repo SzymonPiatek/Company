@@ -9,10 +9,10 @@
     "migrate:dev": "prisma migrate dev --schema=./prisma/schema.prisma",
     "dev:user": "ts-node-dev --respawn --project apps/user-service/tsconfig.json -r tsconfig-paths/register apps/user-service/src/server.ts",
     "dev:resource": "ts-node-dev --respawn --project apps/resource-service/tsconfig.json -r tsconfig-paths/register apps/resource-service/src/server.ts",
-    "test:user": "npx jest --config apps/user-service/jest.config.ts --coverage",
-    "test:resource": "npx jest --config apps/resource-service/jest.config.ts --coverage",
-    "test:libs": "npx jest --config jest.config.ts --coverage",
-    "test:all": "npm run test:user && npm run test:resource && npm run test:libs"
+    "test:all": "npx jest --coverage",
+    "test:user": "npx jest user-service --coverage",
+    "test:resource": "npx jest resource-service --coverage",
+    "test:libs": "npx jest libs --coverage"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
