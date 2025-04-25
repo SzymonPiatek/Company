@@ -1,6 +1,6 @@
-import type { RequestHandler } from 'express';
-import prisma from '../../../prismaClient';
-import { hashPassword } from '@libs/helpers/bcrypt';
+import type { RequestHandler } from "express";
+import prisma from "../../../prismaClient";
+import { hashPassword } from "@libs/helpers/bcrypt";
 
 type UserParamsProps = {
   id: string;
@@ -25,12 +25,16 @@ const updateUserHandler: RequestHandler = async (req, res): Promise<void> => {
       });
 
       if (existingUser && existingUser.id !== id) {
-        res.status(409).json({ error: 'Email is already taken by another user' });
+        res
+          .status(409)
+          .json({ error: "Email is already taken by another user" });
         return;
       }
     }
 
-    const newHashedPassword = data.password ? await hashPassword(data.password) : undefined;
+    const newHashedPassword = data.password
+      ? await hashPassword(data.password)
+      : undefined;
 
     const updatedUser = await prisma.user.update({
       where: { id },
@@ -45,8 +49,8 @@ const updateUserHandler: RequestHandler = async (req, res): Promise<void> => {
 
     res.status(200).json(updatedUser);
   } catch (error) {
-    console.error('Update user error:', error);
-    res.status(500).json({ error: 'Failed to update user', details: error });
+    console.error("Update user error:", error);
+    res.status(500).json({ error: "Failed to update user", details: error });
   }
 };
 

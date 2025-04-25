@@ -1,6 +1,6 @@
-import type { RequestHandler } from 'express';
-import prisma from '../../../prismaClient';
-import { comparePassword } from '@libs/helpers/bcrypt';
+import type { RequestHandler } from "express";
+import prisma from "../../../prismaClient";
+import { comparePassword } from "@libs/helpers/bcrypt";
 
 type LoginBodyProps = {
   email: string;
@@ -12,21 +12,21 @@ const loginHandler: RequestHandler = async (req, res) => {
     const { email, password } = req.body as LoginBodyProps;
 
     if (!email || !password) {
-      res.status(400).json({ error: 'Email and password are required' });
+      res.status(400).json({ error: "Email and password are required" });
       return;
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      res.status(401).json({ error: 'Invalid email or password' });
+      res.status(401).json({ error: "Invalid email or password" });
       return;
     }
 
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
-      res.status(401).json({ error: 'Invalid email or password' });
+      res.status(401).json({ error: "Invalid email or password" });
       return;
     }
 
@@ -34,7 +34,7 @@ const loginHandler: RequestHandler = async (req, res) => {
       user: { ...user, password: undefined },
     });
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 

@@ -32,6 +32,10 @@ jobs:
       - name: Show container status
         run: docker compose -f api/docker-compose.yml ps
 
+      - name: Run Prettier format check
+        run: |
+          docker compose -f api/docker-compose.yml exec test-manager npm run format:check
+
       - name: Prisma Migrations via prisma-manager
         run: |
           for i in {1..5}; do

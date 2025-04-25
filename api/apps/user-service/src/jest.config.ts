@@ -1,6 +1,6 @@
 export default {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
+  preset: "ts-jest",
+  testEnvironment: "node",
   clearMocks: true,
-  testMatch: ['**/src/**/tests/**/*.test.ts'],
+  testMatch: ["**/src/**/tests/**/*.test.ts"],
 };

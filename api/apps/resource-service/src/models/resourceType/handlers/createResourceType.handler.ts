@@ -1,12 +1,15 @@
-import type { RequestHandler } from 'express';
-import prisma from '../../../prismaClient';
+import type { RequestHandler } from "express";
+import prisma from "../../../prismaClient";
 
 type ResourceBodyProps = {
   name: string;
   code: string;
 };
 
-const createResourceTypeHandler: RequestHandler = async (req, res): Promise<void> => {
+const createResourceTypeHandler: RequestHandler = async (
+  req,
+  res,
+): Promise<void> => {
   try {
     const { name, code } = req.body as ResourceBodyProps;
 
@@ -15,7 +18,7 @@ const createResourceTypeHandler: RequestHandler = async (req, res): Promise<void
     });
 
     if (isNameExisting) {
-      res.status(404).json({ error: 'Resource name already exists' });
+      res.status(404).json({ error: "Resource name already exists" });
       return;
     }
 
@@ -24,7 +27,7 @@ const createResourceTypeHandler: RequestHandler = async (req, res): Promise<void
     });
 
     if (isCodeExisting) {
-      res.status(404).json({ error: 'Resource code already exists' });
+      res.status(404).json({ error: "Resource code already exists" });
       return;
     }
 
@@ -34,7 +37,7 @@ const createResourceTypeHandler: RequestHandler = async (req, res): Promise<void
 
     res.status(201).json(type);
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error', details: error });
+    res.status(500).json({ error: "Internal Server Error", details: error });
   }
 };
 
