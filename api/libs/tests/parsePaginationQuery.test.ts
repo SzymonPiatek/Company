@@ -1,17 +1,17 @@
-import parsePaginationQuery from "../helpers/parsePaginationQuery";
-import type { Request } from "express";
+import parsePaginationQuery from '../helpers/parsePaginationQuery';
+import type { Request } from 'express';
 
-describe("parsePaginationQuery", () => {
-  const mockReq = (query: any): Partial<Request> => ({
+describe('parsePaginationQuery', () => {
+  const mockReq = (query: Record<string, string>): Partial<Request> => ({
     query,
   });
 
-  it("should parse all query params correctly", () => {
+  it('should parse all query params correctly', () => {
     const req = mockReq({
-      page: "2",
-      limit: "20",
-      sortBy: "name",
-      sortOrder: "DESC",
+      page: '2',
+      limit: '20',
+      sortBy: 'name',
+      sortOrder: 'DESC',
     }) as Request;
 
     const result = parsePaginationQuery(req);
@@ -19,15 +19,15 @@ describe("parsePaginationQuery", () => {
     expect(result).toEqual({
       page: 2,
       limit: 20,
-      sortBy: "name",
-      sortOrder: "desc",
+      sortBy: 'name',
+      sortOrder: 'desc',
     });
   });
 
-  it("should fall back to defaults for missing page and limit", () => {
+  it('should fall back to defaults for missing page and limit', () => {
     const req = mockReq({
-      sortBy: "createdAt",
-      sortOrder: "asc",
+      sortBy: 'createdAt',
+      sortOrder: 'asc',
     }) as Request;
 
     const result = parsePaginationQuery(req);
@@ -35,15 +35,15 @@ describe("parsePaginationQuery", () => {
     expect(result).toEqual({
       page: 1,
       limit: 10,
-      sortBy: "createdAt",
-      sortOrder: "asc",
+      sortBy: 'createdAt',
+      sortOrder: 'asc',
     });
   });
 
-  it("should default to page=1 and limit=10 when values are invalid", () => {
+  it('should default to page=1 and limit=10 when values are invalid', () => {
     const req = mockReq({
-      page: "zero",
-      limit: "-5",
+      page: 'zero',
+      limit: '-5',
     }) as Request;
 
     const result = parsePaginationQuery(req);
@@ -52,9 +52,9 @@ describe("parsePaginationQuery", () => {
     expect(result.limit).toBe(10);
   });
 
-  it("should return undefined for invalid sortOrder", () => {
+  it('should return undefined for invalid sortOrder', () => {
     const req = mockReq({
-      sortOrder: "upwards",
+      sortOrder: 'upwards',
     }) as Request;
 
     const result = parsePaginationQuery(req);
@@ -62,20 +62,20 @@ describe("parsePaginationQuery", () => {
     expect(result.sortOrder).toBeUndefined();
   });
 
-  it("should allow only one of sortBy or sortOrder", () => {
-    const req = mockReq({ sortBy: "id" }) as Request;
+  it('should allow only one of sortBy or sortOrder', () => {
+    const req = mockReq({ sortBy: 'id' }) as Request;
 
     const result = parsePaginationQuery(req);
 
     expect(result).toEqual({
       page: 1,
       limit: 10,
-      sortBy: "id",
+      sortBy: 'id',
       sortOrder: undefined,
     });
   });
 
-  it("should handle completely empty query object", () => {
+  it('should handle completely empty query object', () => {
     const req = mockReq({}) as Request;
 
     const result = parsePaginationQuery(req);

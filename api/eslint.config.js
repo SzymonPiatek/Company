@@ -1,31 +1,25 @@
-// eslint.config.js
-const config = async () => {
-  const tsPlugin = await import('@typescript-eslint/eslint-plugin');
-  const tsParser = await import('@typescript-eslint/parser');
+import tseslint from 'typescript-eslint';
 
-  return [
-    {
-      files: ['**/*.ts'],
-      languageOptions: {
-        parser: tsParser.default,
-        parserOptions: {
-          ecmaVersion: 'latest',
-          sourceType: 'module',
-        },
-      },
-      plugins: {
-        '@typescript-eslint': tsPlugin.default,
-      },
-      rules: {
-        'no-console': 'off',
-        '@typescript-eslint/no-explicit-any': 'warn',
-        '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+export default [
+  ...tseslint.config({
+    files: ['**/*.ts'],
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+    },
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
       },
     },
-    {
-      ignores: ['node_modules', 'dist', 'build', 'coverage'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': 'error',
+      'no-console': 'off',
     },
-  ];
-};
-
-export default config();
+  }),
+  {
+    ignores: ['node_modules', 'dist', 'build', 'coverage'],
+  },
+];
