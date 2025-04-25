@@ -81,6 +81,7 @@ services:
       - ./prisma:/usr/src/app/prisma
       - ./tsconfig.json:/usr/src/app/tsconfig.json
       - ./tsconfig.base.json:/usr/src/app/tsconfig.base.json
+      - ./jest.config.base.ts:/usr/src/app/jest.config.base.ts
       - ./apps/resource-service:/usr/src/app/apps/resource-service
       - ./apps/resource-service/tsconfig.json:/usr/src/app/apps/resource-service/tsconfig.json
       - ./libs:/usr/src/app/libs
