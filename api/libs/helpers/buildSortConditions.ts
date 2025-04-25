@@ -4,24 +4,30 @@ type BuildOrderByOptions<T> = {
   sortBy?: string;
   sortOrder?: SortOrder;
   allowedFields?: (keyof T)[];
-  allowedRelations?: string[];
+  allowedRelations?: Record<string, string[]>;
 };
 
 export function buildOrderBy<T>({
   sortBy,
   sortOrder = "asc",
   allowedFields = [] as (keyof T)[],
-  allowedRelations = [],
+  allowedRelations = {},
 }: BuildOrderByOptions<T>) {
   if (!sortBy) return undefined;
 
-  if (allowedFields.includes(sortBy as keyof T)) {
+  const isFieldAllowed =
+    allowedFields.length === 0 || allowedFields.includes(sortBy as keyof T);
+
+  if (isFieldAllowed) {
     return { [sortBy]: sortOrder };
   }
 
-  for (const relation of allowedRelations) {
-    if (sortBy.startsWith(`${relation}.`)) {
-      const field = sortBy.split(".")[1];
+  const [relation, field] = sortBy.split(".");
+
+  if (relation && field) {
+    const allowedFieldsForRelation = allowedRelations[relation];
+
+    if (allowedFieldsForRelation && allowedFieldsForRelation.includes(field)) {
       return { [relation]: { [field]: sortOrder } };
     }
   }
