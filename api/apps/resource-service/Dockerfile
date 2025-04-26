@@ -7,7 +7,6 @@ COPY package*.json ./
 COPY prisma ./prisma
 COPY tsconfig.json ./
 COPY tsconfig.base.json ./
-COPY tsconfig.paths.json ./tsconfig.paths.json
 COPY apps/resource-service ./apps/resource-service
 COPY apps/resource-service/tsconfig.json ./apps/resource-service/tsconfig.json
 COPY libs ./libs
