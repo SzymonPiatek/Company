@@ -116,7 +116,6 @@ services:
       - ./tsconfig.json:/usr/src/app/tsconfig.json
       - ./tsconfig.base.json:/usr/src/app/tsconfig.base.json
       - ./package.json:/usr/src/app/package.json
-      - ./package-lock.json:/usr/src/app/package-lock.json
       - ./jest.config.ts:/usr/src/app/jest.config.ts
       - ./eslint.config.js:/usr/src/app/eslint.config.js
     env_file:
