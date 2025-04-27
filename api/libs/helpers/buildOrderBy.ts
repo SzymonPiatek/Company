@@ -1,34 +1,50 @@
 import { SortOrder } from '../types/types';
 
+type AllowedRelation = {
+  fields: string[];
+  relations?: Record<string, AllowedRelation>;
+};
+
 type BuildOrderByOptions<T> = {
   sortBy?: string;
   sortOrder?: SortOrder;
   allowedFields?: (keyof T)[];
-  allowedRelations?: Record<string, string[]>;
+  allowedRelations?: Record<string, AllowedRelation>;
 };
 
-function buildOrderBy<T>({ sortBy, sortOrder = 'asc', allowedFields = [] as (keyof T)[], allowedRelations = {} }: BuildOrderByOptions<T>) {
+function buildOrderBy<T>({ sortBy, sortOrder = 'asc', allowedFields = [], allowedRelations = {} }: BuildOrderByOptions<T>) {
   if (!sortBy) return {};
 
-  const [relation, field] = sortBy.split('.');
+  const path = sortBy.split('.');
+  let currentAllowed: AllowedRelation = { fields: allowedFields.map(String), relations: allowedRelations };
+  let result: any = {};
+  let pointer = result;
 
-  if (relation && field) {
-    const allowedFieldsForRelation = allowedRelations[relation];
+  for (let i = 0; i < path.length; i++) {
+    const key = path[i];
 
-    if (!allowedFieldsForRelation || !allowedFieldsForRelation.includes(field)) {
-      return {};
+    const isRelation = currentAllowed.relations && currentAllowed.relations[key];
+    const isField = currentAllowed.fields.includes(key);
+
+    if (i === path.length - 1) {
+      if (!isField && !isRelation?.fields.includes(key)) {
+        return {};
+      }
+      pointer[key] = sortOrder;
+    } else {
+      if (!isRelation) {
+        return {};
+      }
+      pointer[key] = {};
+      pointer = pointer[key];
+      currentAllowed = {
+        fields: isRelation.fields,
+        relations: isRelation.relations ?? {},
+      };
     }
-
-    return { [relation]: { [field]: sortOrder } };
   }
 
-  const isFieldAllowed = allowedFields.length === 0 || allowedFields.includes(sortBy as keyof T);
-
-  if (isFieldAllowed) {
-    return { [sortBy]: sortOrder };
-  }
-
-  return {};
+  return result;
 }
 
 export default buildOrderBy;

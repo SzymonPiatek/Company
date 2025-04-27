@@ -4,7 +4,7 @@ import type { ResourceLocationHistory } from '@prisma/client';
 import parsePaginationQuery from '@libs/helpers/parsePaginationQuery';
 import paginateData from '@libs/helpers/paginateData';
 import buildQueryConditions from '@libs/helpers/buildQueryConditions';
-import buildOrderByAdvanced from '@libs/helpers/buildOrderByAdvanced';
+import buildOrderBy from '@libs/helpers/buildOrderBy';
 
 type ResourceLocationHistoryQueryProps = {
   search?: string;
@@ -15,7 +15,7 @@ const getResourceLocationHistoriesHandler: RequestHandler = async (req, res) => 
   try {
     const pagination = parsePaginationQuery(req);
 
-    const orderBy = buildOrderByAdvanced<ResourceLocationHistory>({
+    const orderBy = buildOrderBy<ResourceLocationHistory>({
       sortBy: pagination.sortBy,
       sortOrder: pagination.sortOrder,
       allowedFields: ['id', 'resourceId', 'fromLocationId', 'toLocationId', 'movedAt', 'createdAt', 'updatedAt'],

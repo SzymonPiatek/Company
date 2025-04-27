@@ -1,10 +1,10 @@
-import prisma from "../../../prismaClient";
-import type { RequestHandler } from "express";
-import type { Resource } from "@prisma/client";
-import parsePaginationQuery from "@libs/helpers/parsePaginationQuery";
-import buildQueryConditions from "@libs/helpers/buildQueryConditions";
-import paginateData from "@libs/helpers/paginateData";
-import buildOrderBy from "@libs/helpers/buildOrderBy";
+import prisma from '../../../prismaClient';
+import type { RequestHandler } from 'express';
+import type { Resource } from '@prisma/client';
+import parsePaginationQuery from '@libs/helpers/parsePaginationQuery';
+import buildQueryConditions from '@libs/helpers/buildQueryConditions';
+import paginateData from '@libs/helpers/paginateData';
+import buildOrderBy from '@libs/helpers/buildOrderBy';
 
 type ResourcesQueryProps = {
   name?: string;
@@ -21,26 +21,18 @@ const getResourcesHandler: RequestHandler = async (req, res) => {
     const orderBy = buildOrderBy<Resource>({
       sortBy: pagination.sortBy,
       sortOrder: pagination.sortOrder,
-      allowedFields: [
-        "id",
-        "name",
-        "code",
-        "description",
-        "isActive",
-        "typeId",
-        "createdAt",
-        "updatedAt",
-      ],
+      allowedFields: ['id', 'name', 'code', 'description', 'isActive', 'typeId', 'createdAt', 'updatedAt'],
       allowedRelations: {
-        type: ["id", "name", "code", "createdAt", "updatedAt"],
+        type: {
+          fields: ['id', 'name', 'code', 'createdAt', 'updatedAt'],
+        },
       },
     });
 
-    const { name, code, description, isActive, search } =
-      req.query as ResourcesQueryProps;
+    const { name, code, description, isActive, search } = req.query as ResourcesQueryProps;
 
     const where = buildQueryConditions({
-      fields: ["name", "code", "description"],
+      fields: ['name', 'code', 'description'],
       filters: { name, code, description, isActive },
       search,
     });
@@ -57,7 +49,7 @@ const getResourcesHandler: RequestHandler = async (req, res) => {
 
     res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error", details: error });
+    res.status(500).json({ error: 'Internal Server Error', details: error });
   }
 };
 

@@ -3,8 +3,8 @@ import type { WarehouseLocation } from '@prisma/client';
 import parsePaginationQuery from '@libs/helpers/parsePaginationQuery';
 import buildQueryConditions from '@libs/helpers/buildQueryConditions';
 import paginateData from '@libs/helpers/paginateData';
-import buildOrderBy from '@libs/helpers/buildOrderBy';
 import prisma from '@apps/warehouse-service/src/prismaClient';
+import buildOrderBy from '@libs/helpers/buildOrderBy';
 
 type WarehouseLocationQueryProps = {
   name?: string;
@@ -20,11 +20,6 @@ const getWarehouseLocationsHandler: RequestHandler = async (req, res) => {
       sortBy: pagination.sortBy,
       sortOrder: pagination.sortOrder,
       allowedFields: ['id', 'name', 'description', 'createdAt', 'updatedAt'],
-      allowedRelations: {
-        resources: ['id', 'name', 'code', 'createdAt', 'updatedAt'],
-        fromLocationHistory: ['id', 'movedAt', 'createdAt', 'updatedAt'],
-        toLocationHistory: ['id', 'movedAt', 'createdAt', 'updatedAt'],
-      },
     });
 
     const { name, description, search } = req.query as WarehouseLocationQueryProps;
