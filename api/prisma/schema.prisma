@@ -20,6 +20,19 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
+model WarehouseLocation {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+
+  resources           Resource[]                @relation("CurrentLocation")
+  fromLocationHistory ResourceLocationHistory[] @relation("FromLocation")
+  toLocationHistory   ResourceLocationHistory[] @relation("ToLocation")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model ResourceType {
   id   String @id @default(uuid())
   name String @unique
@@ -38,10 +51,30 @@ model Resource {
   description String?
   isActive    Boolean @default(true)
 
-  typeId String
+  currentLocationId String?
+  typeId            String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  type ResourceType @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  type            ResourceType       @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  currentLocation WarehouseLocation? @relation("CurrentLocation", fields: [currentLocationId], references: [id])
+
+  locationHistory ResourceLocationHistory[]
+}
+
+model ResourceLocationHistory {
+  id             String   @id @default(uuid())
+  resourceId     String
+  fromLocationId String?
+  toLocationId   String
+  movedAt        DateTime @default(now())
+
+  resource     Resource           @relation(fields: [resourceId], references: [id])
+  fromLocation WarehouseLocation? @relation("FromLocation", fields: [fromLocationId], references: [id])
+  toLocation   WarehouseLocation  @relation("ToLocation", fields: [toLocationId], references: [id])
+
+  @@index([resourceId])
+  @@index([fromLocationId])
+  @@index([toLocationId])
 }

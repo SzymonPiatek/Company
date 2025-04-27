@@ -104,6 +104,39 @@ services:
       - 'traefik.http.routers.resource.entrypoints=web'
       - 'traefik.http.services.resource.loadbalancer.server.port=3000'
 
+  warehouse-service:
+    build:
+      context: .
+      dockerfile: apps/warehouse-service/Dockerfile
+    working_dir: /usr/src/app
+    volumes:
+      - ./prisma:/usr/src/app/prisma
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./tsconfig.base.json:/usr/src/app/tsconfig.base.json
+      - ./apps/warehouse-service:/usr/src/app/apps/warehouse-service
+      - ./apps/warehouse-service/tsconfig.json:/usr/src/app/apps/warehouse-service/tsconfig.json
+      - ./libs:/usr/src/app/libs
+    env_file:
+      - ../envs/.env-db
+      - ../envs/.env-api
+    ports:
+      - '3003:3000'
+    command: >
+      sh -c "
+        echo '✅ Generating Prisma Client...';
+        npm run generate;
+
+        echo '🚀 Starting Warehouse Service...';
+        npm run dev:warehouse;
+      "
+    depends_on:
+      - postgres
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.warehouse.rule=PathPrefix(`/api/warehouse`)'
+      - 'traefik.http.routers.warehouse.entrypoints=web'
+      - 'traefik.http.services.warehouse.loadbalancer.server.port=3000'
+
   test-manager:
     build:
       context: .

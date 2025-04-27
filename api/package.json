@@ -10,6 +10,7 @@
     "migrate:dev": "prisma migrate dev --schema=./prisma/schema.prisma",
     "dev:user": "tsx watch apps/user-service/src/server.ts",
     "dev:resource": "tsx watch apps/resource-service/src/server.ts",
+    "dev:warehouse": "tsx watch apps/warehouse-service/src/server.ts",
     "test:all": "npx jest --coverage",
     "test:user": "npx jest user-service --silent --passWithNoTests",
     "test:resource": "npx jest resource-service --silent --passWithNoTests",

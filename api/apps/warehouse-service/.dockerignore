@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+
+dist
+*.tsbuildinfo
+
+.env
+
+.dockerignore
+Dockerfile
+
+.DS_Store
+
+.git
+.gitignore
