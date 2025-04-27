@@ -15,6 +15,7 @@
     "test:user": "npx jest user-service --silent --passWithNoTests",
     "test:resource": "npx jest resource-service --silent --passWithNoTests",
     "test:libs": "npx jest libs --silent --passWithNoTests",
+    "test:warehouse": "npx jest warehouse-service --silent --passWithNoTests",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --ext .ts --no-cache",

@@ -1,11 +1,14 @@
-import { RequestHandler } from 'express';
-import prisma from '@apps/warehouse-service/src/prismaClient';
+import { RequestHandler } from "express";
+import prisma from "../../../prismaClient";
 
 type WarehouseLocationParamsProps = {
   id: string;
 };
 
-const getWarehouseLocationByIdHandler: RequestHandler = async (req, res): Promise<void> => {
+const getWarehouseLocationByIdHandler: RequestHandler = async (
+  req,
+  res,
+): Promise<void> => {
   const { id } = req.params as WarehouseLocationParamsProps;
 
   try {
@@ -14,13 +17,13 @@ const getWarehouseLocationByIdHandler: RequestHandler = async (req, res): Promis
     });
 
     if (!results) {
-      res.status(404).json({ error: 'Warehouse location not found' });
+      res.status(404).json({ error: "Warehouse location not found" });
       return;
     }
 
     res.status(200).json(results);
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error', details: error });
+    res.status(500).json({ error: "Internal Server Error", details: error });
   }
 };
 

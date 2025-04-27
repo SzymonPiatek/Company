@@ -1,49 +1,61 @@
-import prisma from '../../../prismaClient';
-import type { RequestHandler } from 'express';
-import type { ResourceLocationHistory } from '@prisma/client';
-import parsePaginationQuery from '@libs/helpers/parsePaginationQuery';
-import paginateData from '@libs/helpers/paginateData';
-import buildQueryConditions from '@libs/helpers/buildQueryConditions';
-import buildOrderBy from '@libs/helpers/buildOrderBy';
+import prisma from "../../../prismaClient";
+import type { RequestHandler } from "express";
+import type { ResourceLocationHistory } from "@prisma/client";
+import parsePaginationQuery from "@libs/helpers/parsePaginationQuery";
+import paginateData from "@libs/helpers/paginateData";
+import buildQueryConditions from "@libs/helpers/buildQueryConditions";
+import buildOrderBy from "@libs/helpers/buildOrderBy";
 
 type ResourceLocationHistoryQueryProps = {
   search?: string;
   resourceId?: string;
 };
 
-const getResourceLocationHistoriesHandler: RequestHandler = async (req, res) => {
+const getResourceLocationHistoriesHandler: RequestHandler = async (
+  req,
+  res,
+) => {
   try {
     const pagination = parsePaginationQuery(req);
 
     const orderBy = buildOrderBy<ResourceLocationHistory>({
       sortBy: pagination.sortBy,
       sortOrder: pagination.sortOrder,
-      allowedFields: ['id', 'resourceId', 'fromLocationId', 'toLocationId', 'movedAt', 'createdAt', 'updatedAt'],
+      allowedFields: [
+        "id",
+        "resourceId",
+        "fromLocationId",
+        "toLocationId",
+        "movedAt",
+        "createdAt",
+        "updatedAt",
+      ],
       allowedRelations: {
         resources: {
-          fields: ['id', 'name', 'code', 'createdAt', 'updatedAt'],
+          fields: ["id", "name", "code", "createdAt", "updatedAt"],
           relations: {
             type: {
-              fields: ['id', 'name', 'code'],
+              fields: ["id", "name", "code"],
               relations: {},
             },
           },
         },
         fromLocationHistory: {
-          fields: ['id', 'movedAt', 'createdAt', 'updatedAt'],
+          fields: ["id", "movedAt", "createdAt", "updatedAt"],
           relations: {},
         },
         toLocationHistory: {
-          fields: ['id', 'movedAt', 'createdAt', 'updatedAt'],
+          fields: ["id", "movedAt", "createdAt", "updatedAt"],
           relations: {},
         },
       },
     });
 
-    const { resourceId, search } = req.query as ResourceLocationHistoryQueryProps;
+    const { resourceId, search } =
+      req.query as ResourceLocationHistoryQueryProps;
 
     const where = buildQueryConditions({
-      fields: ['id'],
+      fields: ["id"],
       filters: { resourceId },
       search,
     });
@@ -64,7 +76,7 @@ const getResourceLocationHistoriesHandler: RequestHandler = async (req, res) => 
 
     res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error', details: error });
+    res.status(500).json({ error: "Internal Server Error", details: error });
   }
 };
 

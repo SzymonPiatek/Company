@@ -24,7 +24,9 @@ describe("buildOrderBy", () => {
     const result = buildOrderBy<TestModel>({
       sortBy: "type.name",
       allowedRelations: {
-        type: ["id", "name"],
+        type: {
+          fields: ["id", "name"],
+        },
       },
     });
     expect(result).toEqual({ type: { name: "asc" } });
@@ -42,7 +44,9 @@ describe("buildOrderBy", () => {
     const result = buildOrderBy<TestModel>({
       sortBy: "type.invalidField",
       allowedRelations: {
-        type: ["id", "name"],
+        type: {
+          fields: ["id", "name"],
+        },
       },
     });
     expect(result).toEqual({});
@@ -62,5 +66,17 @@ describe("buildOrderBy", () => {
       allowedFields: ["id", "name", "createdAt"],
     });
     expect(result).toEqual({ name: "desc" });
+  });
+
+  it("returns empty object for relation not listed in allowedRelations", () => {
+    const result = buildOrderBy<TestModel>({
+      sortBy: "unknownRelation.name",
+      allowedRelations: {
+        knownRelation: {
+          fields: ["id", "name"],
+        },
+      },
+    });
+    expect(result).toEqual({});
   });
 });

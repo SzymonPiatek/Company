@@ -1,5 +1,5 @@
-import type { RequestHandler } from 'express';
-import prisma from '@apps/warehouse-service/src/prismaClient';
+import type { RequestHandler } from "express";
+import prisma from "../../../prismaClient";
 
 type WarehouseLocationParamsProps = {
   id: string;
@@ -16,7 +16,7 @@ const updateWarehouseLocationHandler: RequestHandler = async (req, res) => {
     const { name, description } = req.body as WarehouseLocationBodyProps;
 
     if (!id) {
-      res.status(400).send({ error: 'Missing location ID' });
+      res.status(400).send({ error: "Missing location ID" });
       return;
     }
 
@@ -25,7 +25,7 @@ const updateWarehouseLocationHandler: RequestHandler = async (req, res) => {
     });
 
     if (!warehouseLocation) {
-      res.status(404).send({ error: 'Warehouse location not found' });
+      res.status(404).send({ error: "Warehouse location not found" });
       return;
     }
 
@@ -39,7 +39,7 @@ const updateWarehouseLocationHandler: RequestHandler = async (req, res) => {
 
     res.status(200).json(updatedLocation);
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error', details: error });
+    res.status(500).json({ error: "Internal Server Error", details: error });
   }
 };
 

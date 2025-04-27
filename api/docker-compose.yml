@@ -24,8 +24,6 @@ services:
       - 'traefik.http.routers.prisma.rule=PathPrefix(`/studio`)'
       - 'traefik.http.routers.prisma.entrypoints=web'
       - 'traefik.http.services.prisma.loadbalancer.server.port=5555'
-    depends_on:
-      - postgres
     command: >
       sh -c "
         echo '🔄 Running Prisma Migrate...';
@@ -37,6 +35,8 @@ services:
         echo '🚀 Starting Prisma Studio...';
         npx prisma studio --schema=prisma/schema.prisma --port 5555
       "
+    depends_on:
+      - postgres
 
   user-service:
     build:
@@ -158,6 +158,7 @@ services:
       - postgres
       - user-service
       - resource-service
+      - warehouse-service
       - prisma-manager
     command: >
       sh -c "
