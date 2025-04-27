@@ -4,7 +4,7 @@ type BuildOrderByOptions<T> = {
   sortBy?: string;
   sortOrder?: SortOrder;
   allowedFields?: (keyof T)[];
-  allowedRelations?: Record<string, string>;
+  allowedRelations?: Record<string, string[]>;
 };
 
 function buildOrderBy<T>({ sortBy, sortOrder = 'asc', allowedFields = [] as (keyof T)[], allowedRelations = {} }: BuildOrderByOptions<T>) {
