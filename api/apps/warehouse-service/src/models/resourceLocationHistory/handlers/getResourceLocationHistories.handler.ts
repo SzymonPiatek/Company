@@ -2,9 +2,9 @@ import prisma from '../../../prismaClient';
 import type { RequestHandler } from 'express';
 import type { ResourceLocationHistory } from '@prisma/client';
 import parsePaginationQuery from '@libs/helpers/parsePaginationQuery';
-import buildOrderBy from '@libs/helpers/buildOrderBy';
 import paginateData from '@libs/helpers/paginateData';
 import buildQueryConditions from '@libs/helpers/buildQueryConditions';
+import buildOrderByAdvanced from '@libs/helpers/buildOrderByAdvanced';
 
 type ResourceLocationHistoryQueryProps = {
   search?: string;
@@ -15,14 +15,28 @@ const getResourceLocationHistoriesHandler: RequestHandler = async (req, res) => 
   try {
     const pagination = parsePaginationQuery(req);
 
-    const orderBy = buildOrderBy<ResourceLocationHistory>({
+    const orderBy = buildOrderByAdvanced<ResourceLocationHistory>({
       sortBy: pagination.sortBy,
       sortOrder: pagination.sortOrder,
       allowedFields: ['id', 'resourceId', 'fromLocationId', 'toLocationId', 'movedAt', 'createdAt', 'updatedAt'],
       allowedRelations: {
-        resource: ['id', 'name', 'code', 'description', 'isActive', 'typeId', 'createdAt', 'updatedAt'],
-        fromLocation: ['id', 'name', 'description', 'createdAt', 'updatedAt'],
-        toLocation: ['id', 'name', 'description', 'createdAt', 'updatedAt'],
+        resources: {
+          fields: ['id', 'name', 'code', 'createdAt', 'updatedAt'],
+          relations: {
+            type: {
+              fields: ['id', 'name', 'code'],
+              relations: {},
+            },
+          },
+        },
+        fromLocationHistory: {
+          fields: ['id', 'movedAt', 'createdAt', 'updatedAt'],
+          relations: {},
+        },
+        toLocationHistory: {
+          fields: ['id', 'movedAt', 'createdAt', 'updatedAt'],
+          relations: {},
+        },
       },
     });
 
