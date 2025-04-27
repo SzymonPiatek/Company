@@ -27,13 +27,13 @@ services:
     command: >
       sh -c "
         echo '🔄 Running Prisma Migrate...';
-        npx prisma migrate dev --schema=prisma/schema.prisma;
+        npx prisma migrate dev --schema=./prisma;
 
         echo '✅ Generating Prisma Client...';
-        npx prisma generate --schema=prisma/schema.prisma;
+        npx prisma generate --schema=./prisma;
 
         echo '🚀 Starting Prisma Studio...';
-        npx prisma studio --schema=prisma/schema.prisma --port 5555
+        npx prisma studio --schema=./prisma --port 5555
       "
     depends_on:
       - postgres

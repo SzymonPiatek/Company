@@ -6,8 +6,8 @@
   ],
   "type": "module",
   "scripts": {
-    "generate": "prisma generate --schema=./prisma/schema.prisma",
-    "migrate:dev": "prisma migrate dev --schema=./prisma/schema.prisma",
+    "generate": "prisma generate --schema=./prisma",
+    "migrate:dev": "prisma migrate dev --schema=./prisma",
     "dev:user": "tsx watch apps/user-service/src/server.ts",
     "dev:resource": "tsx watch apps/resource-service/src/server.ts",
     "dev:warehouse": "tsx watch apps/warehouse-service/src/server.ts",
@@ -20,6 +20,9 @@
     "format:check": "prettier --check .",
     "lint": "eslint . --ext .ts --no-cache",
     "lint:fix": "eslint . --ext .ts --fix"
+  },
+  "prisma": {
+    "schema": "./prisma"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
