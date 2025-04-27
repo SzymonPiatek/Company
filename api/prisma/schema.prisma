@@ -74,6 +74,9 @@ model ResourceLocationHistory {
   fromLocation WarehouseLocation? @relation("FromLocation", fields: [fromLocationId], references: [id])
   toLocation   WarehouseLocation  @relation("ToLocation", fields: [toLocationId], references: [id])
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([resourceId])
   @@index([fromLocationId])
   @@index([toLocationId])
