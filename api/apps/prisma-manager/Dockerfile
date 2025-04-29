@@ -7,6 +7,5 @@ COPY package*.json ./
 
 RUN npm install
 RUN npx prisma generate --schema=./prisma
-RUN npx prisma studio --schema=./prisma --port 5555
 
 EXPOSE 5555

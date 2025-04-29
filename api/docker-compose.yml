@@ -26,13 +26,13 @@ services:
       - 'traefik.http.services.prisma.loadbalancer.server.port=5555'
     command: >
       sh -c "
-        echo '🔄 Running Prisma Migrate...';
+        echo 'Running Prisma Migrate...';
         npx prisma migrate dev --schema=./prisma;
 
-        echo '✅ Generating Prisma Client...';
+        echo 'Generating Prisma Client...';
         npx prisma generate --schema=./prisma;
 
-        echo '🚀 Starting Prisma Studio...';
+        echo 'Starting Prisma Studio...';
         npx prisma studio --schema=./prisma --port 5555
       "
     depends_on:
@@ -57,10 +57,10 @@ services:
       - '3001:3000'
     command: >
       sh -c "
-        echo '✅ Generating Prisma Client...';
+        echo 'Generating Prisma Client...';
         npm run generate;
 
-        echo '🚀 Starting User Service...';
+        echo 'Starting User Service...';
         npm run dev:user;
       "
     depends_on:
@@ -90,10 +90,10 @@ services:
       - '3002:3000'
     command: >
       sh -c "
-        echo '✅ Generating Prisma Client...';
+        echo 'Generating Prisma Client...';
         npm run generate;
 
-        echo '🚀 Starting Resource Service...';
+        echo 'Starting Resource Service...';
         npm run dev:resource;
       "
     depends_on:
@@ -123,10 +123,10 @@ services:
       - '3003:3000'
     command: >
       sh -c "
-        echo '✅ Generating Prisma Client...';
+        echo 'Generating Prisma Client...';
         npm run generate;
 
-        echo '🚀 Starting Warehouse Service...';
+        echo 'Starting Warehouse Service...';
         npm run dev:warehouse;
       "
     depends_on:
