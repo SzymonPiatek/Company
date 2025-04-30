@@ -41,6 +41,7 @@ describe("GET /resourceLocations/:id", () => {
 
   afterEach(async () => {
     await prisma.assignedResource.deleteMany();
+    await prisma.resourceLocationHistory.deleteMany();
     await prisma.resourceLocation.deleteMany();
     jest.clearAllMocks();
   });

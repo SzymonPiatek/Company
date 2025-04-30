@@ -11,6 +11,7 @@ describe("PATCH /resourceLocations/:id", () => {
 
   beforeEach(async () => {
     await prisma.assignedResource.deleteMany();
+    await prisma.resourceLocationHistory.deleteMany();
     await prisma.resourceLocation.deleteMany();
 
     locationAId = uuid();
