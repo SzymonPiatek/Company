@@ -15,7 +15,7 @@ const createResourceLocationHandler: RequestHandler = async (req, res) => {
     });
 
     if (existing) {
-      res.status(409).json({ error: 'ResourceLocation with this name already exists.' });
+      res.status(409).json({ error: 'Resource location with this name already exists.' });
       return;
     }
 
