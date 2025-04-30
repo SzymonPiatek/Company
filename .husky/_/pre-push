@@ -46,8 +46,8 @@ echo ""
 echo "🔵 Upewniam się, że docker-compose jest uruchomiony..."
 docker compose -f $DOCKER_COMPOSE_FILE up -d
 
-run_check "Formatowanie kodu (Prettier)" "format"
-run_check "Lintowanie kodu (ESLint)" "lint:fix"
+run_check "Formatowanie kodu (Prettier)" "format:check"
+run_check "Lintowanie kodu (ESLint)" "lint"
 
 run_test "User Service" "test:user"
 run_test "Resource Service" "test:resource"
