@@ -13,13 +13,15 @@ describe("POST /resourceLocations", () => {
   });
 
   afterEach(async () => {
-    await prisma.resourceLocation.deleteMany({
-      where: {
-        name: {
-          startsWith: "Loc-",
+    await prisma.$transaction([
+      prisma.resourceType.deleteMany({
+        where: {
+          name: {
+            startsWith: "Loc-",
+          },
         },
-      },
-    });
+      }),
+    ]);
   });
 
   it("should create a new resource location and return 201", async () => {

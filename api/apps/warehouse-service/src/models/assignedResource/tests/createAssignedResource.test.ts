@@ -17,12 +17,21 @@ describe("POST /assignedResources", () => {
     locationId = uuid();
     resourceId = uuid();
 
-    await prisma.assignedResource.deleteMany();
-    await prisma.resourceLocation.deleteMany();
+    await prisma.$transaction([
+      prisma.assignedResource.deleteMany(),
+      prisma.resourceLocation.deleteMany(),
+    ]);
 
     await prisma.resourceLocation.create({
       data: { id: locationId, name: `Location-${locationId}` },
     });
+  });
+
+  afterEach(async () => {
+    await prisma.$transaction([
+      prisma.assignedResource.deleteMany(),
+      prisma.resourceLocation.deleteMany(),
+    ]);
   });
 
   it("returns 201 and created assigned resource on success", async () => {
