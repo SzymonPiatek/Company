@@ -51,6 +51,7 @@ run_check "Lintowanie kodu (ESLint)" "lint:fix"
 
 run_test "User Service" "test:user"
 run_test "Resource Service" "test:resource"
+run_test "Warehouse Service" "test:warehouse"
 run_test "Libs" "test:libs"
 
 echo ""

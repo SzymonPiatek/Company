@@ -1,19 +1,19 @@
-import request from 'supertest';
-import prisma from '../../../prismaClient';
-import app from '../../../app';
-import { v4 as uuid } from 'uuid';
+import request from "supertest";
+import prisma from "../../../prismaClient";
+import app from "../../../app";
+import { v4 as uuid } from "uuid";
 
-const baseUrl = '/api/warehouse/resourceLocations';
+const baseUrl = "/api/warehouse/resourceLocations";
 
-describe('GET /resourceLocations', () => {
+describe("GET /resourceLocations", () => {
   const nameA = `Loc-A-${uuid()}`;
   const nameB = `Loc-B-${uuid()}`;
 
   beforeEach(async () => {
     await prisma.resourceLocation.createMany({
       data: [
-        { name: nameA, description: 'First location' },
-        { name: nameB, description: 'Second location' },
+        { name: nameA, description: "First location" },
+        { name: nameB, description: "Second location" },
       ],
     });
   });
@@ -26,7 +26,7 @@ describe('GET /resourceLocations', () => {
     });
   });
 
-  it('returns list of resource locations', async () => {
+  it("returns list of resource locations", async () => {
     const res = await request(app).get(baseUrl);
 
     expect(res.status).toBe(200);
@@ -34,29 +34,35 @@ describe('GET /resourceLocations', () => {
     expect(res.body.data.length).toBeGreaterThan(0);
   });
 
-  it('filters by name', async () => {
+  it("filters by name", async () => {
     const res = await request(app).get(`${baseUrl}?name=${nameA}`);
     expect(res.status).toBe(200);
     expect(res.body.data[0].name).toBe(nameA);
   });
 
-  it('filters by description', async () => {
-    const res = await request(app).get(`${baseUrl}?description=Second location`);
+  it("filters by description", async () => {
+    const res = await request(app).get(
+      `${baseUrl}?description=Second location`,
+    );
     expect(res.status).toBe(200);
-    expect(res.body.data[0].description).toBe('Second location');
+    expect(res.body.data[0].description).toBe("Second location");
   });
 
-  it('supports full-text search', async () => {
-    const res = await request(app).get(`${baseUrl}?search=${nameB.split('-')[1]}`);
+  it("supports full-text search", async () => {
+    const res = await request(app).get(
+      `${baseUrl}?search=${nameB.split("-")[1]}`,
+    );
     expect(res.status).toBe(200);
     expect(res.body.data.find((r: any) => r.name === nameB)).toBeTruthy();
   });
 
-  it('returns 500 on server error', async () => {
-    const spy = jest.spyOn(prisma.resourceLocation, 'findMany').mockRejectedValueOnce(new Error('DB FAIL'));
+  it("returns 500 on server error", async () => {
+    const spy = jest
+      .spyOn(prisma.resourceLocation, "findMany")
+      .mockRejectedValueOnce(new Error("DB FAIL"));
     const res = await request(app).get(baseUrl);
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Internal Server Error');
+    expect(res.body.error).toBe("Internal Server Error");
     spy.mockRestore();
   });
 });
