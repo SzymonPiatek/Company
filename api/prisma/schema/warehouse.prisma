@@ -14,14 +14,13 @@ model ResourceLocation {
 
 model AssignedResource {
   id         String @id @default(uuid())
-  resourceId String
+  resourceId String @unique
   locationId String
 
   assignedAt DateTime @default(now())
 
   location ResourceLocation @relation(fields: [locationId], references: [id])
 
-  @@index([resourceId])
   @@index([locationId])
 }
 
