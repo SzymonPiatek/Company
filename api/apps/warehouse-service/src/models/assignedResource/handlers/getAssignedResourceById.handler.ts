@@ -1,5 +1,5 @@
-import type { RequestHandler } from 'express';
-import prisma from '../../../prismaClient';
+import type { RequestHandler } from "express";
+import prisma from "../../../prismaClient";
 
 type AssignerResourceParamsProps = {
   id: string;
@@ -17,13 +17,13 @@ const getAssignedResourceByIdHandler: RequestHandler = async (req, res) => {
     });
 
     if (!assigned) {
-      res.status(404).json({ error: 'Assigned resource not found' });
+      res.status(404).json({ error: "Assigned resource not found" });
       return;
     }
 
     res.status(200).json(assigned);
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error', details: error });
+    res.status(500).json({ error: "Internal Server Error", details: error });
   }
 };
 
