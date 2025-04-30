@@ -3,6 +3,8 @@ import prisma from "../../../prismaClient";
 import app from "../../../app";
 import { v4 as uuid } from "uuid";
 
+const baseUrl = (id: string) => `/api/warehouse/assignedResources/${id}`;
+
 describe("GET /assignedResources/:id", () => {
   let assignedId: string;
   let locationId: string;
@@ -26,18 +28,14 @@ describe("GET /assignedResources/:id", () => {
   });
 
   it("returns 200 and assigned resource", async () => {
-    const res = await request(app).get(
-      `/api/warehouse/assignedResources/${assignedId}`,
-    );
+    const res = await request(app).get(baseUrl(assignedId));
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("id", assignedId);
     expect(res.body.location).toHaveProperty("id", locationId);
   });
 
   it("returns 404 if not found", async () => {
-    const res = await request(app).get(
-      `/api/warehouse/assignedResources/nonexistent-id`,
-    );
+    const res = await request(app).get(baseUrl("nonexistent-id"));
     expect(res.status).toBe(404);
   });
 
@@ -46,9 +44,7 @@ describe("GET /assignedResources/:id", () => {
       .spyOn(prisma.assignedResource, "findUnique")
       .mockRejectedValueOnce(new Error("Something went wrong"));
 
-    const res = await request(app).get(
-      `/api/warehouse/assignedResources/${uuid()}`,
-    );
+    const res = await request(app).get(baseUrl(uuid()));
 
     expect(res.status).toBe(500);
     expect(res.body.error).toBe("Internal Server Error");

@@ -3,6 +3,8 @@ import prisma from "../../../prismaClient";
 import app from "../../../app";
 import { v4 as uuid } from "uuid";
 
+const baseUrl = (id: string) => `/api/warehouse/assignedResources/${id}`;
+
 describe("PATCH /assignedResources/:id", () => {
   let locationAId: string;
   let locationBId: string;
@@ -33,7 +35,7 @@ describe("PATCH /assignedResources/:id", () => {
 
   it("updates locationId and returns updated object", async () => {
     const res = await request(app)
-      .patch(`/api/warehouse/assignedResources/${assignedId}`)
+      .patch(baseUrl(assignedId))
       .send({ locationId: locationBId });
 
     expect(res.status).toBe(200);
@@ -41,16 +43,14 @@ describe("PATCH /assignedResources/:id", () => {
   });
 
   it("returns 400 if locationId missing", async () => {
-    const res = await request(app)
-      .patch(`/api/warehouse/assignedResources/${assignedId}`)
-      .send({});
+    const res = await request(app).patch(baseUrl(assignedId)).send({});
 
     expect(res.status).toBe(400);
   });
 
   it("returns 404 if resource not found", async () => {
     const res = await request(app)
-      .patch(`/api/warehouse/assignedResources/nonexistent-id`)
+      .patch(baseUrl("nonexistent-id"))
       .send({ locationId: locationBId });
 
     expect(res.status).toBe(404);
@@ -62,7 +62,7 @@ describe("PATCH /assignedResources/:id", () => {
       .mockRejectedValueOnce(new Error("fail"));
 
     const res = await request(app)
-      .patch(`/api/warehouse/assignedResources/${assignedId}`)
+      .patch(baseUrl(assignedId))
       .send({ locationId: locationBId });
 
     expect(res.status).toBe(500);

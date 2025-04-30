@@ -7,6 +7,8 @@ import axios from "axios";
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
+const baseUrl = "/api/warehouse/assignedResources";
+
 describe("POST /assignedResources", () => {
   let locationId: string;
   let resourceId: string;
@@ -26,12 +28,10 @@ describe("POST /assignedResources", () => {
   it("returns 201 and created assigned resource on success", async () => {
     mockedAxios.get.mockResolvedValueOnce({ data: { id: resourceId } });
 
-    const res = await request(app)
-      .post("/api/warehouse/assignedResources")
-      .send({
-        resourceId,
-        locationId,
-      });
+    const res = await request(app).post(baseUrl).send({
+      resourceId,
+      locationId,
+    });
 
     expect(res.status).toBe(201);
     expect(res.body).toHaveProperty("id");
@@ -40,21 +40,17 @@ describe("POST /assignedResources", () => {
   });
 
   it("returns 400 if body is incomplete", async () => {
-    const res = await request(app)
-      .post("/api/warehouse/assignedResources")
-      .send({});
+    const res = await request(app).post(baseUrl).send({});
     expect(res.status).toBe(400);
   });
 
   it("returns 404 if resource not found", async () => {
     mockedAxios.get.mockResolvedValueOnce({ data: null });
 
-    const res = await request(app)
-      .post("/api/warehouse/assignedResources")
-      .send({
-        resourceId,
-        locationId,
-      });
+    const res = await request(app).post(baseUrl).send({
+      resourceId,
+      locationId,
+    });
 
     expect(res.status).toBe(404);
   });
@@ -62,12 +58,10 @@ describe("POST /assignedResources", () => {
   it("returns 404 if axios throws error", async () => {
     mockedAxios.get.mockRejectedValueOnce(new Error("Axios error"));
 
-    const res = await request(app)
-      .post("/api/warehouse/assignedResources")
-      .send({
-        resourceId,
-        locationId,
-      });
+    const res = await request(app).post(baseUrl).send({
+      resourceId,
+      locationId,
+    });
 
     expect(res.status).toBe(404);
     expect(res.body.error).toBe("Resource not found");
@@ -80,12 +74,10 @@ describe("POST /assignedResources", () => {
       .spyOn(prisma.assignedResource, "create")
       .mockRejectedValueOnce(new Error("Simulated failure"));
 
-    const res = await request(app)
-      .post("/api/warehouse/assignedResources")
-      .send({
-        resourceId,
-        locationId,
-      });
+    const res = await request(app).post(baseUrl).send({
+      resourceId,
+      locationId,
+    });
 
     expect(res.status).toBe(500);
 
