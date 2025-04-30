@@ -23,6 +23,22 @@ describe("POST /assignedResources", () => {
     });
   });
 
+  it("returns 201 and created assigned resource on success", async () => {
+    mockedAxios.get.mockResolvedValueOnce({ data: { id: resourceId } });
+
+    const res = await request(app)
+      .post("/api/warehouse/assignedResources")
+      .send({
+        resourceId,
+        locationId,
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty("id");
+    expect(res.body.resourceId).toBe(resourceId);
+    expect(res.body.locationId).toBe(locationId);
+  });
+
   it("returns 400 if body is incomplete", async () => {
     const res = await request(app)
       .post("/api/warehouse/assignedResources")
@@ -41,6 +57,20 @@ describe("POST /assignedResources", () => {
       });
 
     expect(res.status).toBe(404);
+  });
+
+  it("returns 404 if axios throws error", async () => {
+    mockedAxios.get.mockRejectedValueOnce(new Error("Axios error"));
+
+    const res = await request(app)
+      .post("/api/warehouse/assignedResources")
+      .send({
+        resourceId,
+        locationId,
+      });
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe("Resource not found");
   });
 
   it("returns 500 on internal error", async () => {

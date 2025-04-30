@@ -52,7 +52,7 @@ const getAssignedResourcesHandler: RequestHandler = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       error: "Internal Server Error",
-      details: error instanceof Error ? error.message : error,
+      details: error,
     });
   }
 };

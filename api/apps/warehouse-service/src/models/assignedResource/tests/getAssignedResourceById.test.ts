@@ -40,4 +40,19 @@ describe("GET /assignedResources/:id", () => {
     );
     expect(res.status).toBe(404);
   });
+
+  it("returns 500 on internal error", async () => {
+    const spy = jest
+      .spyOn(prisma.assignedResource, "findUnique")
+      .mockRejectedValueOnce(new Error("Something went wrong"));
+
+    const res = await request(app).get(
+      `/api/warehouse/assignedResources/${uuid()}`,
+    );
+
+    expect(res.status).toBe(500);
+    expect(res.body.error).toBe("Internal Server Error");
+
+    spy.mockRestore();
+  });
 });
