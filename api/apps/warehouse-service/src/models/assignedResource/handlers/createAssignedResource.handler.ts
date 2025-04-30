@@ -16,11 +16,17 @@ const createAssignedResourceHandler: RequestHandler = async (req, res) => {
       return;
     }
 
-    const resourceCheck = await axios.get(
-      `${process.env.RESOURCE_SERVICE_URL}/resources/${data.resourceId}`,
-    );
-    if (!resourceCheck.data) {
-      res.status(404).json({ error: "Resource not found" });
+    try {
+      const resourceCheck = await axios.get(
+        `${process.env.RESOURCE_SERVICE_URL}/resources/${data.resourceId}`,
+      );
+
+      if (!resourceCheck.data) {
+        res.status(404).json({ error: "Resource not found" });
+        return;
+      }
+    } catch (error) {
+      res.status(404).json({ error: "Resource not found", details: error });
       return;
     }
 

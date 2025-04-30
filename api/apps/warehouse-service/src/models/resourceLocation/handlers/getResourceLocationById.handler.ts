@@ -1,6 +1,6 @@
-import type { RequestHandler } from 'express';
-import prisma from '../../../prismaClient';
-import axios from 'axios';
+import type { RequestHandler } from "express";
+import prisma from "../../../prismaClient";
+import axios from "axios";
 
 type ResourceLocationParamsProps = {
   id: string;
@@ -15,7 +15,7 @@ const getResourceLocationByIdHandler: RequestHandler = async (req, res) => {
     });
 
     if (!location) {
-      res.status(404).json({ error: 'Resource location not found' });
+      res.status(404).json({ error: "Resource location not found" });
       return;
     }
 
@@ -26,7 +26,9 @@ const getResourceLocationByIdHandler: RequestHandler = async (req, res) => {
     const enriched = await Promise.all(
       assignedResources.map(async (ar) => {
         try {
-          const { data } = await axios.get(`${process.env.RESOURCE_SERVICE_URL}/resources/${ar.resourceId}`);
+          const { data } = await axios.get(
+            `${process.env.RESOURCE_SERVICE_URL}/resources/${ar.resourceId}`,
+          );
           return { ...ar, resource: data };
         } catch {
           return { ...ar, resource: null };
@@ -36,7 +38,7 @@ const getResourceLocationByIdHandler: RequestHandler = async (req, res) => {
 
     res.status(200).json({ ...location, assignedResources: enriched });
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error', details: error });
+    res.status(500).json({ error: "Internal Server Error", details: error });
   }
 };
 
