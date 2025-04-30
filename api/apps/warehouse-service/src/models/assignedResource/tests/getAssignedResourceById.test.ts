@@ -10,6 +10,7 @@ describe("GET /assignedResources/:id", () => {
   let locationId: string;
 
   beforeEach(async () => {
+    await prisma.resourceLocationHistory.deleteMany();
     await prisma.assignedResource.deleteMany();
     await prisma.resourceLocation.deleteMany();
 

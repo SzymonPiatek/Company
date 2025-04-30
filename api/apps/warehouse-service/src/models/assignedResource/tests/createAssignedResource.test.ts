@@ -18,6 +18,7 @@ describe("POST /assignedResources", () => {
     resourceId = uuid();
 
     await prisma.$transaction([
+      prisma.resourceLocationHistory.deleteMany(),
       prisma.assignedResource.deleteMany(),
       prisma.resourceLocation.deleteMany(),
     ]);
@@ -29,6 +30,7 @@ describe("POST /assignedResources", () => {
 
   afterEach(async () => {
     await prisma.$transaction([
+      prisma.resourceLocationHistory.deleteMany(),
       prisma.assignedResource.deleteMany(),
       prisma.resourceLocation.deleteMany(),
     ]);
@@ -80,7 +82,7 @@ describe("POST /assignedResources", () => {
     mockedAxios.get.mockResolvedValueOnce({ data: { id: resourceId } });
 
     const spy = jest
-      .spyOn(prisma.assignedResource, "create")
+      .spyOn(prisma, "$transaction")
       .mockRejectedValueOnce(new Error("Simulated failure"));
 
     const res = await request(app).post(baseUrl).send({
@@ -89,6 +91,7 @@ describe("POST /assignedResources", () => {
     });
 
     expect(res.status).toBe(500);
+    expect(res.body.error).toBe("Internal Server Error");
 
     spy.mockRestore();
   });

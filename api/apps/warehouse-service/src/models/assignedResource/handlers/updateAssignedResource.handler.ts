@@ -19,23 +19,36 @@ const updateAssignedResourceHandler: RequestHandler = async (req, res) => {
   }
 
   try {
-    const existing = await prisma.assignedResource.findUnique({
-      where: { id },
-    });
+    const updated = await prisma.$transaction(async (tx) => {
+      const existing = await tx.assignedResource.findUnique({ where: { id } });
 
-    if (!existing) {
-      res.status(404).json({ error: "Assigned resource not found" });
-      return;
-    }
+      if (!existing) {
+        throw new Error("NOT_FOUND");
+      }
 
-    const updated = await prisma.assignedResource.update({
-      where: { id },
-      data: { locationId },
+      const updatedAssigned = await tx.assignedResource.update({
+        where: { id },
+        data: { locationId },
+      });
+
+      await tx.resourceLocationHistory.create({
+        data: {
+          resourceId: existing.resourceId,
+          fromLocationId: existing.locationId,
+          toLocationId: locationId,
+        },
+      });
+
+      return updatedAssigned;
     });
 
     res.status(200).json(updated);
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error", details: error });
+    if (error instanceof Error && error.message === "NOT_FOUND") {
+      res.status(404).json({ error: "Assigned resource not found" });
+    } else {
+      res.status(500).json({ error: "Internal Server Error", details: error });
+    }
   }
 };
 

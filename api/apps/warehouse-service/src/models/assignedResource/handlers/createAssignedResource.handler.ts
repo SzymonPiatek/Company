@@ -30,9 +30,15 @@ const createAssignedResourceHandler: RequestHandler = async (req, res) => {
       return;
     }
 
-    const assigned = await prisma.assignedResource.create({
-      data,
-    });
+    const [assigned] = await prisma.$transaction([
+      prisma.assignedResource.create({ data }),
+      prisma.resourceLocationHistory.create({
+        data: {
+          resourceId: data.resourceId,
+          toLocationId: data.locationId,
+        },
+      }),
+    ]);
 
     res.status(201).json(assigned);
   } catch (error) {

@@ -2,6 +2,7 @@ import request from "supertest";
 import prisma from "../../../prismaClient";
 import app from "../../../app";
 import { v4 as uuid } from "uuid";
+import { ResourceLocation } from "@prisma/client";
 
 const baseUrl = "/api/warehouse/resourceLocations";
 
@@ -53,7 +54,9 @@ describe("GET /resourceLocations", () => {
       `${baseUrl}?search=${nameB.split("-")[1]}`,
     );
     expect(res.status).toBe(200);
-    expect(res.body.data.find((r: any) => r.name === nameB)).toBeTruthy();
+    expect(
+      res.body.data.find((r: ResourceLocation) => r.name === nameB),
+    ).toBeTruthy();
   });
 
   it("returns 500 on server error", async () => {

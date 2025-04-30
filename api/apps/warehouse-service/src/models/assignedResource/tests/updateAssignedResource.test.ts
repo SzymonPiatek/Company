@@ -12,6 +12,7 @@ describe("PATCH /assignedResources/:id", () => {
   let resourceId: string;
 
   beforeEach(async () => {
+    await prisma.resourceLocationHistory.deleteMany();
     await prisma.assignedResource.deleteMany();
     await prisma.resourceLocation.deleteMany();
 
@@ -58,9 +59,8 @@ describe("PATCH /assignedResources/:id", () => {
 
   it("returns 500 on internal error", async () => {
     const spy = jest
-      .spyOn(prisma.assignedResource, "update")
+      .spyOn(prisma, "$transaction")
       .mockRejectedValueOnce(new Error("fail"));
-
     const res = await request(app)
       .patch(baseUrl(assignedId))
       .send({ locationId: locationBId });
