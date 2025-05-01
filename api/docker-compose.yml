@@ -15,6 +15,7 @@ services:
     volumes:
       - ./prisma:/usr/src/app/prisma
       - ./node_modules:/usr/src/app/node_modules
+      - ./libs:/usr/src/app/libs
     env_file:
       - ../envs/.env-db
     ports:
@@ -29,6 +30,9 @@ services:
         echo 'Running Prisma Migrate...';
         npx prisma migrate dev --schema=./prisma;
 
+        echo 'Seeding database...';
+        npm run seed;
+      
         echo 'Generating Prisma Client...';
         npx prisma generate --schema=./prisma;
 

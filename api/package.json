@@ -6,6 +6,7 @@
   ],
   "type": "module",
   "scripts": {
+    "seed": "npx prisma db seed",
     "generate": "prisma generate --schema=./prisma",
     "migrate:dev": "prisma migrate dev --schema=./prisma",
     "dev:user": "tsx watch apps/user-service/src/server.ts",
@@ -22,7 +23,8 @@
     "lint:fix": "eslint . --ext .ts --fix"
   },
   "prisma": {
-    "schema": "./prisma"
+    "schema": "./prisma",
+    "seed": "tsx ./prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
