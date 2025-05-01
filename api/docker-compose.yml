@@ -29,9 +29,6 @@ services:
       sh -c "
         echo 'Running Prisma Migrate...';
         npx prisma migrate dev --schema=./prisma;
-
-        echo 'Seeding database...';
-        npm run seed;
       
         echo 'Generating Prisma Client...';
         npx prisma generate --schema=./prisma;
