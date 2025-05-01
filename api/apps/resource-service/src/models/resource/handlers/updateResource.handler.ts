@@ -29,6 +29,15 @@ const updateResourceHandler: RequestHandler = async (
       return;
     }
 
+    const existingResourceType = await prisma.resourceType.findUnique({
+      where: { id: data.typeId },
+    });
+
+    if (!existingResourceType) {
+      res.status(404).json({ error: "Resource type not found" });
+      return;
+    }
+
     const updated = await prisma.resource.update({
       where: { id },
       data,

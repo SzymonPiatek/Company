@@ -11,22 +11,22 @@ type UserBodyProps = {
 
 const createUserHandler: RequestHandler = async (req, res) => {
   try {
-    const { email, firstName, lastName, password } = req.body as UserBodyProps;
+    const data = req.body as UserBodyProps;
 
-    const isEmailExists = await prisma.user.findUnique({ where: { email } });
+    const isEmailExists = await prisma.user.findUnique({
+      where: { email: data.email },
+    });
 
     if (isEmailExists) {
       res.status(409).json({ error: "User with this email already exists" });
       return;
     }
 
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = await hashPassword(data.password);
 
     const newUser = await prisma.user.create({
       data: {
-        email,
-        firstName,
-        lastName,
+        ...data,
         password: hashedPassword,
       },
       omit: {

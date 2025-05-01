@@ -32,7 +32,9 @@ const getResourcesHandler: RequestHandler = async (req, res) => {
         "updatedAt",
       ],
       allowedRelations: {
-        type: ["id", "name", "code", "createdAt", "updatedAt"],
+        type: {
+          fields: ["id", "name", "code", "createdAt", "updatedAt"],
+        },
       },
     });
 

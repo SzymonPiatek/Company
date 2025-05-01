@@ -18,25 +18,25 @@ services:
     env_file:
       - ../envs/.env-db
     ports:
-      - "5555:5555"
+      - '5555:5555'
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.prisma.rule=PathPrefix(`/studio`)"
-      - "traefik.http.routers.prisma.entrypoints=web"
-      - "traefik.http.services.prisma.loadbalancer.server.port=5555"
-    depends_on:
-      - postgres
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.prisma.rule=PathPrefix(`/studio`)'
+      - 'traefik.http.routers.prisma.entrypoints=web'
+      - 'traefik.http.services.prisma.loadbalancer.server.port=5555'
     command: >
       sh -c "
-        echo '🔄 Running Prisma Migrate...';
-        npx prisma migrate dev --schema=prisma/schema.prisma;
-    
-        echo '✅ Generating Prisma Client...';
-        npx prisma generate --schema=prisma/schema.prisma;
-    
-        echo '🚀 Starting Prisma Studio...';
-        npx prisma studio --schema=prisma/schema.prisma --port 5555
+        echo 'Running Prisma Migrate...';
+        npx prisma migrate dev --schema=./prisma;
+
+        echo 'Generating Prisma Client...';
+        npx prisma generate --schema=./prisma;
+
+        echo 'Starting Prisma Studio...';
+        npx prisma studio --schema=./prisma --port 5555
       "
+    depends_on:
+      - postgres
 
   user-service:
     build:
@@ -54,22 +54,22 @@ services:
       - ../envs/.env-db
       - ../envs/.env-api
     ports:
-      - "3001:3000"
+      - '3001:3000'
     command: >
       sh -c "
-        echo '✅ Generating Prisma Client...';
+        echo 'Generating Prisma Client...';
         npm run generate;
-      
-        echo '🚀 Starting User Service...';
+
+        echo 'Starting User Service...';
         npm run dev:user;
       "
     depends_on:
       - postgres
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.user.rule=PathPrefix(`/api/user`)"
-      - "traefik.http.routers.user.entrypoints=web"
-      - "traefik.http.services.user.loadbalancer.server.port=3000"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.user.rule=PathPrefix(`/api/user`)'
+      - 'traefik.http.routers.user.entrypoints=web'
+      - 'traefik.http.services.user.loadbalancer.server.port=3000'
 
   resource-service:
     build:
@@ -87,22 +87,55 @@ services:
       - ../envs/.env-db
       - ../envs/.env-api
     ports:
-      - "3002:3000"
+      - '3002:3000'
     command: >
       sh -c "
-        echo '✅ Generating Prisma Client...';
+        echo 'Generating Prisma Client...';
         npm run generate;
-      
-        echo '🚀 Starting Resource Service...';
+
+        echo 'Starting Resource Service...';
         npm run dev:resource;
       "
     depends_on:
       - postgres
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.resource.rule=PathPrefix(`/api/resource`)"
-      - "traefik.http.routers.resource.entrypoints=web"
-      - "traefik.http.services.resource.loadbalancer.server.port=3000"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.resource.rule=PathPrefix(`/api/resource`)'
+      - 'traefik.http.routers.resource.entrypoints=web'
+      - 'traefik.http.services.resource.loadbalancer.server.port=3000'
+
+  warehouse-service:
+    build:
+      context: .
+      dockerfile: apps/warehouse-service/Dockerfile
+    working_dir: /usr/src/app
+    volumes:
+      - ./prisma:/usr/src/app/prisma
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - ./tsconfig.base.json:/usr/src/app/tsconfig.base.json
+      - ./apps/warehouse-service:/usr/src/app/apps/warehouse-service
+      - ./apps/warehouse-service/tsconfig.json:/usr/src/app/apps/warehouse-service/tsconfig.json
+      - ./libs:/usr/src/app/libs
+    env_file:
+      - ../envs/.env-db
+      - ../envs/.env-api
+    ports:
+      - '3003:3000'
+    command: >
+      sh -c "
+        echo 'Generating Prisma Client...';
+        npm run generate;
+
+        echo 'Starting Warehouse Service...';
+        npm run dev:warehouse;
+      "
+    depends_on:
+      - postgres
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.warehouse.rule=PathPrefix(`/api/warehouse`)'
+      - 'traefik.http.routers.warehouse.entrypoints=web'
+      - 'traefik.http.services.warehouse.loadbalancer.server.port=3000'
 
   test-manager:
     build:
@@ -116,7 +149,6 @@ services:
       - ./tsconfig.json:/usr/src/app/tsconfig.json
       - ./tsconfig.base.json:/usr/src/app/tsconfig.base.json
       - ./package.json:/usr/src/app/package.json
-      - ./package-lock.json:/usr/src/app/package-lock.json
       - ./jest.config.ts:/usr/src/app/jest.config.ts
       - ./eslint.config.js:/usr/src/app/eslint.config.js
     env_file:
@@ -126,6 +158,7 @@ services:
       - postgres
       - user-service
       - resource-service
+      - warehouse-service
       - prisma-manager
     command: >
       sh -c "
@@ -138,15 +171,15 @@ services:
   traefik:
     image: traefik:v3.0
     command:
-      - "--api.dashboard=true"
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--entrypoints.web.address=:80"
+      - '--api.dashboard=true'
+      - '--api.insecure=true'
+      - '--providers.docker=true'
+      - '--entrypoints.web.address=:80'
     ports:
-      - "80:80"
-      - "8080:8080"
+      - '80:80'
+      - '8080:8080'
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
 
 volumes:
   pgdata:

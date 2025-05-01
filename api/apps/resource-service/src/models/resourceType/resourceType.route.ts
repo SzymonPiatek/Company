@@ -1,5 +1,5 @@
 import { Router } from "express";
-import getResourceTypesHandler from "./handlers/getResourcesType.handler";
+import getResourceTypesHandler from "./handlers/getResourceTypes.handler";
 import getResourceTypeByIdHandler from "./handlers/getResourceTypeById.handler";
 import createResourceTypeHandler from "./handlers/createResourceType.handler";
 import editResourcesTypeHandler from "./handlers/updateResourceType.handler";

@@ -1,47 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
+  provider        = "prisma-client-js"
+  output          = "../node_modules/.prisma/client"
+  previewFeatures = ["prismaSchemaFolder"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-model User {
-  id        String  @id @default(uuid())
-  email     String  @unique
-  firstName String
-  lastName  String
-  password  String
-  isActive  Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model ResourceType {
-  id   String @id @default(uuid())
-  name String @unique
-  code String @unique
-
-  resources Resource[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Resource {
-  id          String  @id @default(uuid())
-  name        String
-  code        String
-  description String?
-  isActive    Boolean @default(true)
-
-  typeId String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  type ResourceType @relation(fields: [typeId], references: [id], onDelete: Cascade)
 }

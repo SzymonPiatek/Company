@@ -45,7 +45,7 @@ describe("GET /users/:id", () => {
     const res = await request(app).get(baseUrl(nonExistentId));
 
     expect(res.status).toBe(404);
-    expect(res.body.error).toBe("Resource not found");
+    expect(res.body.error).toBe("User not found");
   });
 
   it("should return 500 on prisma error", async () => {

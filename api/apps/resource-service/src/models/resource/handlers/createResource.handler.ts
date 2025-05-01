@@ -13,15 +13,10 @@ const createResourceHandler: RequestHandler = async (
   res,
 ): Promise<void> => {
   try {
-    const {
-      name,
-      description,
-      isActive = false,
-      typeId,
-    } = req.body as ResourceBodyProps;
+    const data = req.body as ResourceBodyProps;
 
     const resourceType = await prisma.resourceType.findUnique({
-      where: { id: typeId },
+      where: { id: data.typeId },
     });
 
     if (!resourceType) {
@@ -30,13 +25,16 @@ const createResourceHandler: RequestHandler = async (
     }
 
     const count = await prisma.resource.count({
-      where: { typeId },
+      where: { typeId: data.typeId },
     });
     const paddedCount = String(count + 1).padStart(6, "0");
     const code = `${resourceType.code}-${paddedCount}`;
 
     const type = await prisma.resource.create({
-      data: { name, code, description, isActive, typeId },
+      data: {
+        ...data,
+        code,
+      },
     });
 
     res.status(201).json(type);

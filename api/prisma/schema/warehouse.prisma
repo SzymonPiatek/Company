@@ -1,0 +1,41 @@
+model ResourceLocation {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+
+  assignedResources AssignedResource[]
+
+  fromLocationHistory ResourceLocationHistory[] @relation("FromLocation")
+  toLocationHistory   ResourceLocationHistory[] @relation("ToLocation")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AssignedResource {
+  id         String @id @default(uuid())
+  resourceId String @unique
+  locationId String
+
+  assignedAt DateTime @default(now())
+
+  location ResourceLocation @relation(fields: [locationId], references: [id])
+
+  @@index([locationId])
+}
+
+model ResourceLocationHistory {
+  id             String  @id @default(uuid())
+  resourceId     String
+  fromLocationId String?
+  toLocationId   String
+
+  movedAt DateTime @default(now())
+
+  fromLocation ResourceLocation? @relation("FromLocation", fields: [fromLocationId], references: [id])
+  toLocation   ResourceLocation  @relation("ToLocation", fields: [toLocationId], references: [id])
+
+  @@index([resourceId])
+  @@index([fromLocationId])
+  @@index([toLocationId])
+}

@@ -42,6 +42,7 @@ describe("PATCH /api/resource/resources/:id", () => {
       name: "Updated Resource",
       description: "Updated description",
       isActive: true,
+      typeId,
     });
 
     expect(res.status).toBe(200);
@@ -50,16 +51,27 @@ describe("PATCH /api/resource/resources/:id", () => {
       name: "Updated Resource",
       description: "Updated description",
       isActive: true,
+      typeId,
     });
   });
 
   it("should return 404 if resource not found", async () => {
     const res = await request(app)
       .patch(`${baseUrl}/nonexistent-id`)
-      .send({ name: "Whatever" });
+      .send({ name: "Whatever", typeId });
 
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: "Resource not found" });
+  });
+
+  it("should return 404 if resource type is not found", async () => {
+    const res = await request(app).patch(`${baseUrl}/${resourceId}`).send({
+      name: "With wrong typeId",
+      typeId: "non-existent-type",
+    });
+
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ error: "Resource type not found" });
   });
 
   it("should return 500 on internal error", async () => {

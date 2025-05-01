@@ -17,7 +17,7 @@ const getUserByIdHandler: RequestHandler = async (req, res): Promise<void> => {
     });
 
     if (!results) {
-      res.status(404).json({ error: "Resource not found" });
+      res.status(404).json({ error: "User not found" });
       return;
     }
 

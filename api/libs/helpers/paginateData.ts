@@ -17,7 +17,7 @@ async function paginateData<
   const skip = (page - 1) * limit;
 
   const [total, data] = await Promise.all([
-    model.count({ where: args.where }),
+    model.count({ where: args.where ?? undefined }),
     model.findMany({ ...args, skip, take: limit }),
   ]);
 
