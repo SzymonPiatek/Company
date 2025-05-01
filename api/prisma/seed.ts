@@ -10,25 +10,36 @@ async function main() {
   console.log('Creating users...');
   const hashedPassword = await hashPassword('TestPass123!');
 
-  await prisma.user.createMany({
-    data: Array.from({ length: 5 }, (_, i) => ({
-      email: `user${i + 1}@example.com`,
-      firstName: `User${i + 1}`,
-      lastName: `Last${i + 1}`,
-      password: hashedPassword,
-      isActive: true,
-    })),
-  });
+  await Promise.all(
+    Array.from({ length: 5 }, (_, i) =>
+      prisma.user.upsert({
+        where: { email: `user${i + 1}@example.com` },
+        update: {},
+        create: {
+          email: `user${i + 1}@example.com`,
+          firstName: `User${i + 1}`,
+          lastName: `Last${i + 1}`,
+          password: hashedPassword,
+          isActive: true,
+        },
+      }),
+    ),
+  );
 
   // RESOURCE TYPES
   console.log(`Creating resource types...`);
-  await prisma.resourceType.createMany({
-    data: [
-      { name: 'Biurko', code: 'DESK' },
-      { name: 'Fotel', code: 'CHAIR' },
-    ],
-    skipDuplicates: true,
-  });
+  await Promise.all([
+    prisma.resourceType.upsert({
+      where: { code: 'DESK' },
+      update: {},
+      create: { name: 'Biurko', code: 'DESK' },
+    }),
+    prisma.resourceType.upsert({
+      where: { code: 'CHAIR' },
+      update: {},
+      create: { name: 'Fotel', code: 'CHAIR' },
+    }),
+  ]);
 
   const deskTypeId = (await prisma.resourceType.findUnique({ where: { code: 'DESK' } }))!.id;
   const chairTypeId = (await prisma.resourceType.findUnique({ where: { code: 'CHAIR' } }))!.id;
@@ -36,9 +47,11 @@ async function main() {
   // RESOURCES
   console.log('Creating resources...');
   const desks = await Promise.all(
-    Array.from({ length: 5 }, async (_, i) =>
-      prisma.resource.create({
-        data: {
+    Array.from({ length: 5 }, (_, i) =>
+      prisma.resource.upsert({
+        where: { code: `DESK-${i + 1}` },
+        update: {},
+        create: {
           name: `Biurko ${i + 1}`,
           code: `DESK-${i + 1}`,
           typeId: deskTypeId,
@@ -48,9 +61,11 @@ async function main() {
   );
 
   const chairs = await Promise.all(
-    Array.from({ length: 5 }, async (_, i) =>
-      prisma.resource.create({
-        data: {
+    Array.from({ length: 5 }, (_, i) =>
+      prisma.resource.upsert({
+        where: { code: `CHAIR-${i + 1}` },
+        update: {},
+        create: {
           name: `Fotel ${i + 1}`,
           code: `CHAIR-${i + 1}`,
           typeId: chairTypeId,
@@ -61,10 +76,18 @@ async function main() {
 
   // RESOURCE LOCATIONS
   console.log('Creating resource locations');
-  await prisma.resourceLocation.createMany({
-    data: [{ name: 'Pokój 1' }, { name: 'Pokój 2' }],
-    skipDuplicates: true,
-  });
+  await Promise.all([
+    prisma.resourceLocation.upsert({
+      where: { name: 'Pokój 1' },
+      update: {},
+      create: { name: 'Pokój 1' },
+    }),
+    prisma.resourceLocation.upsert({
+      where: { name: 'Pokój 2' },
+      update: {},
+      create: { name: 'Pokój 2' },
+    }),
+  ]);
 
   const room1Id = (await prisma.resourceLocation.findUnique({ where: { name: 'Pokój 1' } }))!.id;
   const room2Id = (await prisma.resourceLocation.findUnique({ where: { name: 'Pokój 2' } }))!.id;
@@ -72,10 +95,15 @@ async function main() {
   // ASSIGNED RESOURCES & RESOURCE LOCATION HISTORIES
   const allResources = [...desks, ...chairs];
 
-  await Promise.all(
-    allResources.map(async (resource, idx) => {
-      const locationId = idx < 5 ? room1Id : room2Id;
+  for (let i = 0; i < allResources.length; i++) {
+    const resource = allResources[i];
+    const locationId = i < 5 ? room1Id : room2Id;
 
+    const alreadyAssigned = await prisma.assignedResource.findUnique({
+      where: { resourceId: resource.id },
+    });
+
+    if (!alreadyAssigned) {
       await prisma.assignedResource.create({
         data: {
           resourceId: resource.id,
@@ -89,8 +117,8 @@ async function main() {
           toLocationId: locationId,
         },
       });
-    }),
-  );
+    }
+  }
 
   console.log('Seeding data completed!');
 }
