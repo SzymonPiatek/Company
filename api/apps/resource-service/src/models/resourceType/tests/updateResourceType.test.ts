@@ -102,6 +102,9 @@ describe("PATCH /api/resource/resourceTypes/:id", () => {
   });
 
   it("should return 500 on internal error", async () => {
+    const originalError = console.error;
+    console.error = jest.fn();
+
     const spy = jest
       .spyOn(prisma.resourceType, "findUnique")
       .mockRejectedValueOnce(new Error("DB FAIL"));
@@ -115,6 +118,7 @@ describe("PATCH /api/resource/resourceTypes/:id", () => {
     expect(res.body.error).toBe("Internal Server Error");
 
     spy.mockRestore();
+    console.error = originalError;
   });
 
   it("should update name only if code did not change", async () => {

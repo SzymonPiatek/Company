@@ -1,14 +1,14 @@
-import { PrismaClient } from '@prisma/client';
-import { hashPassword } from '../libs/helpers/bcrypt';
+import { PrismaClient } from "@prisma/client";
+import { hashPassword } from "../libs/helpers/bcrypt";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Start seeding data...');
+  console.log("Start seeding data...");
 
   // USERS
-  console.log('Creating users...');
-  const hashedPassword = await hashPassword('TestPass123!');
+  console.log("Creating users...");
+  const hashedPassword = await hashPassword("TestPass123!");
 
   await Promise.all(
     Array.from({ length: 5 }, (_, i) =>
@@ -30,22 +30,26 @@ async function main() {
   console.log(`Creating resource types...`);
   await Promise.all([
     prisma.resourceType.upsert({
-      where: { code: 'DESK' },
+      where: { code: "DESK" },
       update: {},
-      create: { name: 'Biurko', code: 'DESK' },
+      create: { name: "Biurko", code: "DESK" },
     }),
     prisma.resourceType.upsert({
-      where: { code: 'CHAIR' },
+      where: { code: "CHAIR" },
       update: {},
-      create: { name: 'Fotel', code: 'CHAIR' },
+      create: { name: "Fotel", code: "CHAIR" },
     }),
   ]);
 
-  const deskTypeId = (await prisma.resourceType.findUnique({ where: { code: 'DESK' } }))!.id;
-  const chairTypeId = (await prisma.resourceType.findUnique({ where: { code: 'CHAIR' } }))!.id;
+  const deskTypeId = (await prisma.resourceType.findUnique({
+    where: { code: "DESK" },
+  }))!.id;
+  const chairTypeId = (await prisma.resourceType.findUnique({
+    where: { code: "CHAIR" },
+  }))!.id;
 
   // RESOURCES
-  console.log('Creating resources...');
+  console.log("Creating resources...");
   const desks = await Promise.all(
     Array.from({ length: 5 }, (_, i) =>
       prisma.resource.upsert({
@@ -75,22 +79,26 @@ async function main() {
   );
 
   // RESOURCE LOCATIONS
-  console.log('Creating resource locations');
+  console.log("Creating resource locations");
   await Promise.all([
     prisma.resourceLocation.upsert({
-      where: { name: 'Pokój 1' },
+      where: { name: "Pokój 1" },
       update: {},
-      create: { name: 'Pokój 1' },
+      create: { name: "Pokój 1" },
     }),
     prisma.resourceLocation.upsert({
-      where: { name: 'Pokój 2' },
+      where: { name: "Pokój 2" },
       update: {},
-      create: { name: 'Pokój 2' },
+      create: { name: "Pokój 2" },
     }),
   ]);
 
-  const room1Id = (await prisma.resourceLocation.findUnique({ where: { name: 'Pokój 1' } }))!.id;
-  const room2Id = (await prisma.resourceLocation.findUnique({ where: { name: 'Pokój 2' } }))!.id;
+  const room1Id = (await prisma.resourceLocation.findUnique({
+    where: { name: "Pokój 1" },
+  }))!.id;
+  const room2Id = (await prisma.resourceLocation.findUnique({
+    where: { name: "Pokój 2" },
+  }))!.id;
 
   // ASSIGNED RESOURCES & RESOURCE LOCATION HISTORIES
   const allResources = [...desks, ...chairs];
@@ -120,12 +128,12 @@ async function main() {
     }
   }
 
-  console.log('Seeding data completed!');
+  console.log("Seeding data completed!");
 }
 
 main()
   .catch((e) => {
-    console.error('eed failed', e);
+    console.error("eed failed", e);
     process.exit(1);
   })
   .finally(async () => {
