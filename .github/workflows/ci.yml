@@ -38,7 +38,7 @@ jobs:
         run: |
           for i in {1..5}; do
             echo "Attempt $i: Running Prisma Migrate..."
-            docker compose -f api/docker-compose.yml exec prisma-manager npx prisma migrate dev --schema=prisma/schema.prisma && break
+            docker compose -f api/docker-compose.yml exec prisma-manager npm run migrate:dev && break
             echo "Prisma Migrate failed, retrying in 5 seconds..."
             sleep 5
             if [ "$i" -eq 10 ]; then
