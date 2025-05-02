@@ -1,151 +1,55 @@
-import { PrismaClient } from '@prisma/client';
-import { hashPassword } from '../libs/helpers/bcrypt';
+import { PrismaClient } from "@prisma/client";
+import createUsers from "../libs/seed/user-service/users";
+import createResourceTypes from "../libs/seed/resource-service/resourceType";
+import createResources from "../libs/seed/resource-service/resources";
+import createResourceLocations from "../libs/seed/warehouse-service/resourceLocations";
+import cleaningData from "../libs/seed/cleaningData";
+import createAssignedResourcesAndResourceLocationHistories from "../libs/seed/warehouse-service/assignedResourcesAndResourceLocationHistories";
 
 const prisma = new PrismaClient();
 
 async function main() {
   // CLEANING DATABASE
-  console.log('Cleaning database...');
-  await prisma.$transaction([
-    prisma.resourceLocationHistory.deleteMany(),
-    prisma.assignedResource.deleteMany(),
-    prisma.resource.deleteMany(),
-    prisma.resourceType.deleteMany(),
-    prisma.resourceLocation.deleteMany(),
-    prisma.user.deleteMany(),
-  ]);
+  await cleaningData({
+    prisma,
+    models: [
+      "resourceLocationHistory",
+      "assignedResource",
+      "resource",
+      "resourceType",
+      "resourceLocation",
+      "user",
+    ],
+  });
 
   // START SEED
-  console.log('Start seeding data...');
+  console.log("Start seeding data...");
 
   // USERS
-  console.log('Creating users...');
-  const hashedPassword = await hashPassword('TestPass123!');
-
-  await Promise.all(
-    Array.from({ length: 5 }, (_, i) =>
-      prisma.user.upsert({
-        where: { email: `user${i + 1}@example.com` },
-        update: {},
-        create: {
-          email: `user${i + 1}@example.com`,
-          firstName: `User${i + 1}`,
-          lastName: `Last${i + 1}`,
-          password: hashedPassword,
-          isActive: true,
-        },
-      }),
-    ),
-  );
+  await createUsers({ prisma, length: 5, password: "TestPass123!" });
 
   // RESOURCE TYPES
-  console.log(`Creating resource types...`);
-  await Promise.all([
-    prisma.resourceType.upsert({
-      where: { code: 'DESK' },
-      update: {},
-      create: { name: 'Biurko', code: 'DESK' },
-    }),
-    prisma.resourceType.upsert({
-      where: { code: 'CHAIR' },
-      update: {},
-      create: { name: 'Fotel', code: 'CHAIR' },
-    }),
-  ]);
-
-  const deskTypeId = (await prisma.resourceType.findUnique({
-    where: { code: 'DESK' },
-  }))!.id;
-  const chairTypeId = (await prisma.resourceType.findUnique({
-    where: { code: 'CHAIR' },
-  }))!.id;
+  await createResourceTypes({ prisma });
 
   // RESOURCES
-  console.log('Creating resources...');
-  const desks = await Promise.all(
-    Array.from({ length: 5 }, (_, i) =>
-      prisma.resource.upsert({
-        where: { code: `DESK-${i + 1}` },
-        update: {},
-        create: {
-          name: `Biurko ${i + 1}`,
-          code: `DESK-${i + 1}`,
-          typeId: deskTypeId,
-        },
-      }),
-    ),
-  );
-
-  const chairs = await Promise.all(
-    Array.from({ length: 5 }, (_, i) =>
-      prisma.resource.upsert({
-        where: { code: `CHAIR-${i + 1}` },
-        update: {},
-        create: {
-          name: `Fotel ${i + 1}`,
-          code: `CHAIR-${i + 1}`,
-          typeId: chairTypeId,
-        },
-      }),
-    ),
-  );
+  const allResources = await createResources({ prisma, lengthPerType: 5 });
 
   // RESOURCE LOCATIONS
-  console.log('Creating resource locations');
-  await Promise.all([
-    prisma.resourceLocation.upsert({
-      where: { name: 'Pokój 1' },
-      update: {},
-      create: { name: 'Pokój 1' },
-    }),
-    prisma.resourceLocation.upsert({
-      where: { name: 'Pokój 2' },
-      update: {},
-      create: { name: 'Pokój 2' },
-    }),
-  ]);
-
-  const room1Id = (await prisma.resourceLocation.findUnique({
-    where: { name: 'Pokój 1' },
-  }))!.id;
-  const room2Id = (await prisma.resourceLocation.findUnique({
-    where: { name: 'Pokój 2' },
-  }))!.id;
+  const allLocations = await createResourceLocations({ prisma });
 
   // ASSIGNED RESOURCES & RESOURCE LOCATION HISTORIES
-  const allResources = [...desks, ...chairs];
+  await createAssignedResourcesAndResourceLocationHistories({
+    prisma,
+    resources: allResources,
+    locations: allLocations,
+  });
 
-  for (let i = 0; i < allResources.length; i++) {
-    const resource = allResources[i];
-    const locationId = i < 5 ? room1Id : room2Id;
-
-    const alreadyAssigned = await prisma.assignedResource.findUnique({
-      where: { resourceId: resource.id },
-    });
-
-    if (!alreadyAssigned) {
-      await prisma.assignedResource.create({
-        data: {
-          resourceId: resource.id,
-          locationId,
-        },
-      });
-
-      await prisma.resourceLocationHistory.create({
-        data: {
-          resourceId: resource.id,
-          toLocationId: locationId,
-        },
-      });
-    }
-  }
-
-  console.log('Seeding data completed!');
+  console.log("...data seeded!");
 }
 
 main()
   .catch((e) => {
-    console.error('eed failed', e);
+    console.error("eed failed", e);
     process.exit(1);
   })
   .finally(async () => {
