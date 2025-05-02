@@ -1,4 +1,4 @@
-import { SortOrder } from "../types/types";
+import { SortOrder } from '../types/types';
 
 type AllowedRelation = {
   fields: string[];
@@ -14,13 +14,13 @@ type BuildOrderByOptions<T> = {
 
 function buildOrderBy<T>({
   sortBy,
-  sortOrder = "asc",
+  sortOrder = 'asc',
   allowedFields,
   allowedRelations = {},
 }: BuildOrderByOptions<T>) {
   if (!sortBy) return {};
 
-  const path = sortBy.split(".");
+  const path = sortBy.split('.');
   let result: Record<string, unknown> = {};
   let pointer = result;
 
@@ -32,10 +32,7 @@ function buildOrderBy<T>({
   for (let i = 0; i < path.length; i++) {
     const key = path[i];
     const isRelation = currentAllowed.relations?.[key];
-    const isField =
-      currentAllowed.fields.length > 0
-        ? currentAllowed.fields.includes(key)
-        : true;
+    const isField = currentAllowed.fields.length > 0 ? currentAllowed.fields.includes(key) : true;
     const isLast = i === path.length - 1;
 
     if (isLast) {

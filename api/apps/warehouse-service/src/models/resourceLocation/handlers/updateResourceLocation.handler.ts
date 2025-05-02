@@ -1,5 +1,5 @@
-import type { RequestHandler } from "express";
-import prisma from "../../../prismaClient";
+import type { RequestHandler } from 'express';
+import prisma from '../../../prismaClient';
 
 type ResourceLocationParamsProps = {
   id: string;
@@ -19,7 +19,7 @@ const updateResourceLocationHandler: RequestHandler = async (req, res) => {
       where: { id },
     });
     if (!existingLocation) {
-      res.status(404).json({ error: "Resource location not found" });
+      res.status(404).json({ error: 'Resource location not found' });
       return;
     }
 
@@ -29,9 +29,7 @@ const updateResourceLocationHandler: RequestHandler = async (req, res) => {
       });
 
       if (nameTaken) {
-        res
-          .status(409)
-          .json({ error: "Resource location with this name already exists." });
+        res.status(409).json({ error: 'Resource location with this name already exists.' });
         return;
       }
     }
@@ -42,7 +40,7 @@ const updateResourceLocationHandler: RequestHandler = async (req, res) => {
 
     res.status(200).json(updated);
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error", details: error });
+    res.status(500).json({ error: 'Internal Server Error', details: error });
   }
 };
 

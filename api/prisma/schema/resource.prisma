@@ -12,7 +12,7 @@ model ResourceType {
 model Resource {
   id          String  @id @default(uuid())
   name        String
-  code        String
+  code        String  @unique
   description String?
   isActive    Boolean @default(true)
 

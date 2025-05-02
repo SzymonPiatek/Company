@@ -15,6 +15,7 @@ services:
     volumes:
       - ./prisma:/usr/src/app/prisma
       - ./node_modules:/usr/src/app/node_modules
+      - ./libs:/usr/src/app/libs
     env_file:
       - ../envs/.env-db
     ports:
@@ -28,7 +29,7 @@ services:
       sh -c "
         echo 'Running Prisma Migrate...';
         npx prisma migrate dev --schema=./prisma;
-
+      
         echo 'Generating Prisma Client...';
         npx prisma generate --schema=./prisma;
 
@@ -151,6 +152,7 @@ services:
       - ./package.json:/usr/src/app/package.json
       - ./jest.config.ts:/usr/src/app/jest.config.ts
       - ./eslint.config.js:/usr/src/app/eslint.config.js
+      - ./.prettierrc:/usr/src/app/.prettierrc
     env_file:
       - ../envs/.env-api
       - ../envs/.env-db

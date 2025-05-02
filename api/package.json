@@ -6,6 +6,7 @@
   ],
   "type": "module",
   "scripts": {
+    "seed": "npx prisma db seed",
     "generate": "prisma generate --schema=./prisma",
     "migrate:dev": "prisma migrate dev --schema=./prisma",
     "dev:user": "tsx watch apps/user-service/src/server.ts",
@@ -16,13 +17,14 @@
     "test:resource": "npx jest resource-service --runInBand --silent --passWithNoTests",
     "test:libs": "npx jest libs --runInBand --silent --passWithNoTests",
     "test:warehouse": "npx jest warehouse-service --runInBand --silent --passWithNoTests",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "prettier --config ./.prettierrc --write .",
+    "format:check": "prettier --config ./.prettierrc --check .",
     "lint": "eslint . --ext .ts --no-cache",
     "lint:fix": "eslint . --ext .ts --fix"
   },
   "prisma": {
-    "schema": "./prisma"
+    "schema": "./prisma",
+    "seed": "tsx ./prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",

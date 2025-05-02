@@ -1,5 +1,5 @@
-import type { RequestHandler } from "express";
-import prisma from "../../../prismaClient";
+import type { RequestHandler } from 'express';
+import prisma from '../../../prismaClient';
 
 type ResourceTypeParamsProps = {
   id: string;
@@ -10,10 +10,7 @@ type ResourceTypeBodyProps = {
   code: string;
 };
 
-const updateResourceTypeHandler: RequestHandler = async (
-  req,
-  res,
-): Promise<void> => {
+const updateResourceTypeHandler: RequestHandler = async (req, res): Promise<void> => {
   const { id } = req.params as ResourceTypeParamsProps;
   const data = req.body as ResourceTypeBodyProps;
 
@@ -23,7 +20,7 @@ const updateResourceTypeHandler: RequestHandler = async (
     });
 
     if (!existingType) {
-      res.status(404).json({ error: "ResourceType not found" });
+      res.status(404).json({ error: 'ResourceType not found' });
       return;
     }
 
@@ -35,7 +32,7 @@ const updateResourceTypeHandler: RequestHandler = async (
     });
 
     if (nameTaken) {
-      res.status(409).json({ error: "Resource name already exists" });
+      res.status(409).json({ error: 'Resource name already exists' });
       return;
     }
 
@@ -47,7 +44,7 @@ const updateResourceTypeHandler: RequestHandler = async (
     });
 
     if (codeTaken) {
-      res.status(409).json({ error: "Resource code already exists" });
+      res.status(409).json({ error: 'Resource code already exists' });
       return;
     }
 
@@ -64,9 +61,10 @@ const updateResourceTypeHandler: RequestHandler = async (
 
         await Promise.all(
           resources.map((resource) => {
-            const parts = resource.code.split("-");
-            const numeric = parts[1] || "000001";
+            const match = resource.code?.match(/-(\d+)$/);
+            const numeric = match?.[1]?.padStart(6, '0') || '000001';
             const newCode = `${data.code}-${numeric}`;
+
             return tx.resource.update({
               where: { id: resource.id },
               data: { code: newCode },
@@ -80,7 +78,8 @@ const updateResourceTypeHandler: RequestHandler = async (
 
     res.status(200).json(updatedType);
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error", details: error });
+    console.error('Update resource type failed:', error);
+    res.status(500).json({ error: 'Internal Server Error', details: String(error) });
   }
 };
 

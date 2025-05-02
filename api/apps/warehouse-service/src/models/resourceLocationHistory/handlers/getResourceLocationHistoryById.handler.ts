@@ -1,10 +1,7 @@
-import type { RequestHandler } from "express";
-import prisma from "../../../prismaClient";
+import type { RequestHandler } from 'express';
+import prisma from '../../../prismaClient';
 
-const getResourceLocationHistoryByIdHandler: RequestHandler = async (
-  req,
-  res,
-) => {
+const getResourceLocationHistoryByIdHandler: RequestHandler = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -17,13 +14,13 @@ const getResourceLocationHistoryByIdHandler: RequestHandler = async (
     });
 
     if (!entry) {
-      res.status(404).json({ error: "History record not found" });
+      res.status(404).json({ error: 'History record not found' });
       return;
     }
 
     res.status(200).json(entry);
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error", details: error });
+    res.status(500).json({ error: 'Internal Server Error', details: error });
   }
 };
 

@@ -1,6 +1,6 @@
-import type { RequestHandler } from "express";
-import prisma from "../../../prismaClient";
-import axios from "axios";
+import type { RequestHandler } from 'express';
+import prisma from '../../../prismaClient';
+import axios from 'axios';
 
 type AssignedResourceBodyProps = {
   resourceId: string;
@@ -12,7 +12,7 @@ const createAssignedResourceHandler: RequestHandler = async (req, res) => {
     const data = req.body as AssignedResourceBodyProps;
 
     if (!data?.resourceId || !data?.locationId) {
-      res.status(400).json({ error: "ResourceId and locationId are required" });
+      res.status(400).json({ error: 'ResourceId and locationId are required' });
       return;
     }
 
@@ -22,11 +22,11 @@ const createAssignedResourceHandler: RequestHandler = async (req, res) => {
       );
 
       if (!resourceCheck.data) {
-        res.status(404).json({ error: "Resource not found" });
+        res.status(404).json({ error: 'Resource not found' });
         return;
       }
     } catch (error) {
-      res.status(404).json({ error: "Resource not found", details: error });
+      res.status(404).json({ error: 'Resource not found', details: error });
       return;
     }
 
@@ -42,7 +42,7 @@ const createAssignedResourceHandler: RequestHandler = async (req, res) => {
 
     res.status(201).json(assigned);
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error", details: error });
+    res.status(500).json({ error: 'Internal Server Error', details: error });
   }
 };
 

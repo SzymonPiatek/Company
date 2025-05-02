@@ -1,5 +1,5 @@
-import type { RequestHandler } from "express";
-import prisma from "../../../prismaClient";
+import type { RequestHandler } from 'express';
+import prisma from '../../../prismaClient';
 
 type AssignedResourceParamsProps = {
   id: string;
@@ -14,7 +14,7 @@ const updateAssignedResourceHandler: RequestHandler = async (req, res) => {
   const { locationId } = req.body as AssignedResourceBodyProps;
 
   if (!locationId) {
-    res.status(400).json({ error: "Missing locationId in request body" });
+    res.status(400).json({ error: 'Missing locationId in request body' });
     return;
   }
 
@@ -23,7 +23,7 @@ const updateAssignedResourceHandler: RequestHandler = async (req, res) => {
       const existing = await tx.assignedResource.findUnique({ where: { id } });
 
       if (!existing) {
-        throw new Error("NOT_FOUND");
+        throw new Error('NOT_FOUND');
       }
 
       const updatedAssigned = await tx.assignedResource.update({
@@ -44,10 +44,10 @@ const updateAssignedResourceHandler: RequestHandler = async (req, res) => {
 
     res.status(200).json(updated);
   } catch (error) {
-    if (error instanceof Error && error.message === "NOT_FOUND") {
-      res.status(404).json({ error: "Assigned resource not found" });
+    if (error instanceof Error && error.message === 'NOT_FOUND') {
+      res.status(404).json({ error: 'Assigned resource not found' });
     } else {
-      res.status(500).json({ error: "Internal Server Error", details: error });
+      res.status(500).json({ error: 'Internal Server Error', details: error });
     }
   }
 };

@@ -1,21 +1,18 @@
-import request from "supertest";
-import prisma from "../../../prismaClient";
-import app from "../../../app";
-import { v4 as uuid } from "uuid";
+import request from 'supertest';
+import prisma from '../../../prismaClient';
+import app from '../../../app';
+import { v4 as uuid } from 'uuid';
 
 const baseUrl = (id: string) => `/api/warehouse/assignedResources/${id}`;
 
-describe("GET /assignedResources/:id", () => {
+describe('GET /assignedResources/:id', () => {
   let assignedId: string;
   let locationId: string;
+  let resourceId: string;
 
   beforeEach(async () => {
-    await prisma.resourceLocationHistory.deleteMany();
-    await prisma.assignedResource.deleteMany();
-    await prisma.resourceLocation.deleteMany();
-
     locationId = uuid();
-    const resourceId = uuid();
+    resourceId = uuid();
 
     await prisma.resourceLocation.create({
       data: { id: locationId, name: `Loc-${locationId}` },
@@ -28,27 +25,34 @@ describe("GET /assignedResources/:id", () => {
     assignedId = assigned.id;
   });
 
-  it("returns 200 and assigned resource", async () => {
-    const res = await request(app).get(baseUrl(assignedId));
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty("id", assignedId);
-    expect(res.body.location).toHaveProperty("id", locationId);
+  afterEach(async () => {
+    // Cleanup only the created entities
+    await prisma.resourceLocationHistory.deleteMany({ where: { resourceId } }).catch(() => {});
+    await prisma.assignedResource.delete({ where: { id: assignedId } }).catch(() => {});
+    await prisma.resourceLocation.delete({ where: { id: locationId } }).catch(() => {});
   });
 
-  it("returns 404 if not found", async () => {
-    const res = await request(app).get(baseUrl("nonexistent-id"));
+  it('returns 200 and assigned resource', async () => {
+    const res = await request(app).get(baseUrl(assignedId));
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('id', assignedId);
+    expect(res.body.location).toHaveProperty('id', locationId);
+  });
+
+  it('returns 404 if not found', async () => {
+    const res = await request(app).get(baseUrl('nonexistent-id'));
     expect(res.status).toBe(404);
   });
 
-  it("returns 500 on internal error", async () => {
+  it('returns 500 on internal error', async () => {
     const spy = jest
-      .spyOn(prisma.assignedResource, "findUnique")
-      .mockRejectedValueOnce(new Error("Something went wrong"));
+      .spyOn(prisma.assignedResource, 'findUnique')
+      .mockRejectedValueOnce(new Error('Something went wrong'));
 
     const res = await request(app).get(baseUrl(uuid()));
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe("Internal Server Error");
+    expect(res.body.error).toBe('Internal Server Error');
 
     spy.mockRestore();
   });
