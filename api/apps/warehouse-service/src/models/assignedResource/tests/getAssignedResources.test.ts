@@ -8,23 +8,27 @@ const baseUrl = '/api/warehouse/assignedResources';
 describe('GET /assignedResources', () => {
   let locationId: string;
   let resourceId: string;
+  let assignedId: string;
 
   beforeEach(async () => {
-    await prisma.resourceLocationHistory.deleteMany();
-    await prisma.assignedResource.deleteMany();
-    await prisma.resourceLocation.deleteMany();
-
     locationId = uuid();
     resourceId = uuid();
 
-    await prisma.$transaction([
-      prisma.resourceLocation.create({
-        data: { id: locationId, name: `Location-${locationId}` },
-      }),
-      prisma.assignedResource.create({
-        data: { resourceId, locationId },
-      }),
-    ]);
+    await prisma.resourceLocation.create({
+      data: { id: locationId, name: `Location-${locationId}` },
+    });
+
+    const assigned = await prisma.assignedResource.create({
+      data: { resourceId, locationId },
+    });
+
+    assignedId = assigned.id;
+  });
+
+  afterEach(async () => {
+    await prisma.resourceLocationHistory.deleteMany({ where: { resourceId } }).catch(() => {});
+    await prisma.assignedResource.delete({ where: { id: assignedId } }).catch(() => {});
+    await prisma.resourceLocation.delete({ where: { id: locationId } }).catch(() => {});
   });
 
   it('returns list of assigned resources with location', async () => {

@@ -8,14 +8,11 @@ const baseUrl = (id: string) => `/api/warehouse/assignedResources/${id}`;
 describe('GET /assignedResources/:id', () => {
   let assignedId: string;
   let locationId: string;
+  let resourceId: string;
 
   beforeEach(async () => {
-    await prisma.resourceLocationHistory.deleteMany();
-    await prisma.assignedResource.deleteMany();
-    await prisma.resourceLocation.deleteMany();
-
     locationId = uuid();
-    const resourceId = uuid();
+    resourceId = uuid();
 
     await prisma.resourceLocation.create({
       data: { id: locationId, name: `Loc-${locationId}` },
@@ -26,6 +23,13 @@ describe('GET /assignedResources/:id', () => {
     });
 
     assignedId = assigned.id;
+  });
+
+  afterEach(async () => {
+    // Cleanup only the created entities
+    await prisma.resourceLocationHistory.deleteMany({ where: { resourceId } }).catch(() => {});
+    await prisma.assignedResource.delete({ where: { id: assignedId } }).catch(() => {});
+    await prisma.resourceLocation.delete({ where: { id: locationId } }).catch(() => {});
   });
 
   it('returns 200 and assigned resource', async () => {

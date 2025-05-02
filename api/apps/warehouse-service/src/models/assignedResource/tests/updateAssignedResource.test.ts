@@ -12,10 +12,6 @@ describe('PATCH /assignedResources/:id', () => {
   let resourceId: string;
 
   beforeEach(async () => {
-    await prisma.resourceLocationHistory.deleteMany();
-    await prisma.assignedResource.deleteMany();
-    await prisma.resourceLocation.deleteMany();
-
     locationAId = uuid();
     locationBId = uuid();
     resourceId = uuid();
@@ -32,6 +28,16 @@ describe('PATCH /assignedResources/:id', () => {
     });
 
     assignedId = assigned.id;
+  });
+
+  afterEach(async () => {
+    await prisma.resourceLocationHistory.deleteMany({ where: { resourceId } });
+    await prisma.assignedResource.delete({ where: { id: assignedId } }).catch(() => {});
+    await prisma.resourceLocation.deleteMany({
+      where: {
+        id: { in: [locationAId, locationBId] },
+      },
+    });
   });
 
   it('updates locationId and returns updated object', async () => {
@@ -60,7 +66,6 @@ describe('PATCH /assignedResources/:id', () => {
     const res = await request(app).patch(baseUrl(assignedId)).send({ locationId: locationBId });
 
     expect(res.status).toBe(500);
-
     spy.mockRestore();
   });
 });

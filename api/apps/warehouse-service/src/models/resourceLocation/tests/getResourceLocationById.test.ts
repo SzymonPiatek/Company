@@ -12,6 +12,7 @@ const baseUrl = '/api/warehouse/resourceLocations';
 describe('GET /resourceLocations/:id', () => {
   let locationId: string;
   let resourceId: string;
+  let assignedId: string;
 
   beforeEach(async () => {
     locationId = uuid();
@@ -24,12 +25,14 @@ describe('GET /resourceLocations/:id', () => {
       },
     });
 
-    await prisma.assignedResource.create({
+    const assigned = await prisma.assignedResource.create({
       data: {
         resourceId,
         locationId,
       },
     });
+
+    assignedId = assigned.id;
 
     mockedAxios.get.mockResolvedValue({
       data: {
@@ -40,9 +43,9 @@ describe('GET /resourceLocations/:id', () => {
   });
 
   afterEach(async () => {
-    await prisma.assignedResource.deleteMany();
-    await prisma.resourceLocationHistory.deleteMany();
-    await prisma.resourceLocation.deleteMany();
+    await prisma.resourceLocationHistory.deleteMany({ where: { resourceId } });
+    await prisma.assignedResource.delete({ where: { id: assignedId } }).catch(() => {});
+    await prisma.resourceLocation.delete({ where: { id: locationId } }).catch(() => {});
     jest.clearAllMocks();
   });
 

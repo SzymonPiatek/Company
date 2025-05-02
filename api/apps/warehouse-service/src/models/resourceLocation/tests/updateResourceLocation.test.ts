@@ -10,10 +10,6 @@ describe('PATCH /resourceLocations/:id', () => {
   let locationBId: string;
 
   beforeEach(async () => {
-    await prisma.assignedResource.deleteMany();
-    await prisma.resourceLocationHistory.deleteMany();
-    await prisma.resourceLocation.deleteMany();
-
     locationAId = uuid();
     locationBId = uuid();
 
@@ -22,6 +18,23 @@ describe('PATCH /resourceLocations/:id', () => {
         { id: locationAId, name: 'Main A' },
         { id: locationBId, name: 'Main B' },
       ],
+    });
+  });
+
+  afterEach(async () => {
+    await prisma.assignedResource.deleteMany({
+      where: { locationId: { in: [locationAId, locationBId] } },
+    });
+    await prisma.resourceLocationHistory.deleteMany({
+      where: {
+        OR: [
+          { fromLocationId: { in: [locationAId, locationBId] } },
+          { toLocationId: { in: [locationAId, locationBId] } },
+        ],
+      },
+    });
+    await prisma.resourceLocation.deleteMany({
+      where: { id: { in: [locationAId, locationBId] } },
     });
   });
 

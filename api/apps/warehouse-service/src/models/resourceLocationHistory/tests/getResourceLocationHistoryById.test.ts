@@ -12,18 +12,14 @@ describe('GET /resourceLocationHistories/:id', () => {
   let resourceId: string;
 
   beforeEach(async () => {
-    await prisma.assignedResource.deleteMany();
-    await prisma.resourceLocationHistory.deleteMany();
-    await prisma.resourceLocation.deleteMany();
-
     fromLocationId = uuid();
     toLocationId = uuid();
     resourceId = uuid();
 
     await prisma.resourceLocation.createMany({
       data: [
-        { id: fromLocationId, name: 'From' },
-        { id: toLocationId, name: 'To' },
+        { id: fromLocationId, name: `From-${fromLocationId}` },
+        { id: toLocationId, name: `To-${toLocationId}` },
       ],
     });
 
@@ -36,6 +32,16 @@ describe('GET /resourceLocationHistories/:id', () => {
     });
 
     historyId = history.id;
+  });
+
+  afterEach(async () => {
+    await prisma.resourceLocationHistory.deleteMany({
+      where: { id: historyId },
+    });
+
+    await prisma.resourceLocation.deleteMany({
+      where: { id: { in: [fromLocationId, toLocationId] } },
+    });
   });
 
   it('returns 200 and history record with relations', async () => {

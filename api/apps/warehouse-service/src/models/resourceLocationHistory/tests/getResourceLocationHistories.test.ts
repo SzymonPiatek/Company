@@ -11,18 +11,14 @@ describe('GET /resourceLocationHistories', () => {
   let resourceId: string;
 
   beforeEach(async () => {
-    await prisma.assignedResource.deleteMany();
-    await prisma.resourceLocationHistory.deleteMany();
-    await prisma.resourceLocation.deleteMany();
-
     fromLocationId = uuid();
     toLocationId = uuid();
     resourceId = uuid();
 
     await prisma.resourceLocation.createMany({
       data: [
-        { id: fromLocationId, name: 'From' },
-        { id: toLocationId, name: 'To' },
+        { id: fromLocationId, name: `From-${fromLocationId}` },
+        { id: toLocationId, name: `To-${toLocationId}` },
       ],
     });
 
@@ -32,6 +28,16 @@ describe('GET /resourceLocationHistories', () => {
         fromLocationId,
         toLocationId,
       },
+    });
+  });
+
+  afterEach(async () => {
+    await prisma.resourceLocationHistory.deleteMany({
+      where: { resourceId },
+    });
+
+    await prisma.resourceLocation.deleteMany({
+      where: { id: { in: [fromLocationId, toLocationId] } },
     });
   });
 
@@ -53,6 +59,7 @@ describe('GET /resourceLocationHistories', () => {
 
   it('returns empty array for unmatched filter', async () => {
     const res = await request(app).get(`${baseUrl}?resourceId=nonexistent`);
+
     expect(res.status).toBe(200);
     expect(res.body.data).toEqual([]);
   });

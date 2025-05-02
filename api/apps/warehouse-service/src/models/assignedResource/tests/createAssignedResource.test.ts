@@ -12,16 +12,12 @@ const baseUrl = '/api/warehouse/assignedResources';
 describe('POST /assignedResources', () => {
   let locationId: string;
   let resourceId: string;
+  let assignedResourceId: string | undefined;
+  let historyId: string | undefined;
 
   beforeEach(async () => {
     locationId = uuid();
     resourceId = uuid();
-
-    await prisma.$transaction([
-      prisma.resourceLocationHistory.deleteMany(),
-      prisma.assignedResource.deleteMany(),
-      prisma.resourceLocation.deleteMany(),
-    ]);
 
     await prisma.resourceLocation.create({
       data: { id: locationId, name: `Location-${locationId}` },
@@ -29,11 +25,15 @@ describe('POST /assignedResources', () => {
   });
 
   afterEach(async () => {
-    await prisma.$transaction([
-      prisma.resourceLocationHistory.deleteMany(),
-      prisma.assignedResource.deleteMany(),
-      prisma.resourceLocation.deleteMany(),
-    ]);
+    if (assignedResourceId) {
+      await prisma.assignedResource.delete({ where: { id: assignedResourceId } }).catch(() => {});
+    }
+
+    if (historyId) {
+      await prisma.resourceLocationHistory.delete({ where: { id: historyId } }).catch(() => {});
+    }
+
+    await prisma.resourceLocation.delete({ where: { id: locationId } }).catch(() => {});
   });
 
   it('returns 201 and created assigned resource on success', async () => {
@@ -48,6 +48,14 @@ describe('POST /assignedResources', () => {
     expect(res.body).toHaveProperty('id');
     expect(res.body.resourceId).toBe(resourceId);
     expect(res.body.locationId).toBe(locationId);
+
+    assignedResourceId = res.body.id;
+
+    const history = await prisma.resourceLocationHistory.findFirst({
+      where: { resourceId },
+    });
+
+    if (history) historyId = history.id;
   });
 
   it('returns 400 if body is incomplete', async () => {
