@@ -1,10 +1,10 @@
-import type { RequestHandler } from "express";
-import prisma from "../../../prismaClient";
-import parsePaginationQuery from "@libs/helpers/parsePaginationQuery";
-import buildOrderBy from "@libs/helpers/buildOrderBy";
-import buildQueryConditions from "@libs/helpers/buildQueryConditions";
-import paginateData from "@libs/helpers/paginateData";
-import type { AssignedResource } from "@prisma/client";
+import type { RequestHandler } from 'express';
+import prisma from '../../../prismaClient';
+import parsePaginationQuery from '@libs/helpers/parsePaginationQuery';
+import buildOrderBy from '@libs/helpers/buildOrderBy';
+import buildQueryConditions from '@libs/helpers/buildQueryConditions';
+import paginateData from '@libs/helpers/paginateData';
+import type { AssignedResource } from '@prisma/client';
 
 type AssignedResourceQueryProps = {
   resourceId?: string;
@@ -19,19 +19,18 @@ const getAssignedResourcesHandler: RequestHandler = async (req, res) => {
     const orderBy = buildOrderBy<AssignedResource>({
       sortBy: pagination.sortBy,
       sortOrder: pagination.sortOrder,
-      allowedFields: ["id", "resourceId", "locationId", "assignedAt"],
+      allowedFields: ['id', 'resourceId', 'locationId', 'assignedAt'],
       allowedRelations: {
         location: {
-          fields: ["id", "name", "description", "createdAt", "updatedAt"],
+          fields: ['id', 'name', 'description', 'createdAt', 'updatedAt'],
         },
       },
     });
 
-    const { resourceId, locationId, search } =
-      req.query as AssignedResourceQueryProps;
+    const { resourceId, locationId, search } = req.query as AssignedResourceQueryProps;
 
     const where = buildQueryConditions({
-      fields: ["resourceId", "locationId"],
+      fields: ['resourceId', 'locationId'],
       filters: { resourceId, locationId },
       search,
     });
@@ -51,7 +50,7 @@ const getAssignedResourcesHandler: RequestHandler = async (req, res) => {
     res.status(200).json(result);
   } catch (error) {
     res.status(500).json({
-      error: "Internal Server Error",
+      error: 'Internal Server Error',
       details: error,
     });
   }

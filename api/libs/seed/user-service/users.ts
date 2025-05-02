@@ -1,5 +1,5 @@
-import { hashPassword } from "../../helpers/bcrypt";
-import type { PrismaClient } from "@prisma/client";
+import { hashPassword } from '../../helpers/bcrypt';
+import type { PrismaClient } from '@prisma/client';
 
 type CreateUsersProps = {
   prisma: PrismaClient;

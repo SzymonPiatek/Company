@@ -1,79 +1,79 @@
-import buildOrderBy from "../helpers/buildOrderBy";
+import buildOrderBy from '../helpers/buildOrderBy';
 
-describe("buildOrderBy", () => {
+describe('buildOrderBy', () => {
   type TestModel = {
     id: string;
     name: string;
     createdAt: Date;
   };
 
-  it("returns empty object when sortBy is undefined", () => {
+  it('returns empty object when sortBy is undefined', () => {
     const result = buildOrderBy<TestModel>({});
     expect(result).toEqual({});
   });
 
-  it("builds orderBy for allowed direct field", () => {
+  it('builds orderBy for allowed direct field', () => {
     const result = buildOrderBy<TestModel>({
-      sortBy: "name",
-      allowedFields: ["id", "name", "createdAt"],
+      sortBy: 'name',
+      allowedFields: ['id', 'name', 'createdAt'],
     });
-    expect(result).toEqual({ name: "asc" });
+    expect(result).toEqual({ name: 'asc' });
   });
 
-  it("builds orderBy for allowed relation field", () => {
+  it('builds orderBy for allowed relation field', () => {
     const result = buildOrderBy<TestModel>({
-      sortBy: "type.name",
+      sortBy: 'type.name',
       allowedRelations: {
         type: {
-          fields: ["id", "name"],
+          fields: ['id', 'name'],
         },
       },
     });
-    expect(result).toEqual({ type: { name: "asc" } });
+    expect(result).toEqual({ type: { name: 'asc' } });
   });
 
-  it("returns empty object for disallowed field", () => {
+  it('returns empty object for disallowed field', () => {
     const result = buildOrderBy<TestModel>({
-      sortBy: "invalidField",
-      allowedFields: ["id", "name"],
+      sortBy: 'invalidField',
+      allowedFields: ['id', 'name'],
     });
     expect(result).toEqual({});
   });
 
-  it("returns empty object for disallowed relation field", () => {
+  it('returns empty object for disallowed relation field', () => {
     const result = buildOrderBy<TestModel>({
-      sortBy: "type.invalidField",
+      sortBy: 'type.invalidField',
       allowedRelations: {
         type: {
-          fields: ["id", "name"],
+          fields: ['id', 'name'],
         },
       },
     });
     expect(result).toEqual({});
   });
 
-  it("accepts any field when allowedFields is empty", () => {
+  it('accepts any field when allowedFields is empty', () => {
     const result = buildOrderBy<TestModel>({
-      sortBy: "createdAt",
+      sortBy: 'createdAt',
     });
-    expect(result).toEqual({ createdAt: "asc" });
+    expect(result).toEqual({ createdAt: 'asc' });
   });
 
-  it("respects provided sortOrder", () => {
+  it('respects provided sortOrder', () => {
     const result = buildOrderBy<TestModel>({
-      sortBy: "name",
-      sortOrder: "desc",
-      allowedFields: ["id", "name", "createdAt"],
+      sortBy: 'name',
+      sortOrder: 'desc',
+      allowedFields: ['id', 'name', 'createdAt'],
     });
-    expect(result).toEqual({ name: "desc" });
+    expect(result).toEqual({ name: 'desc' });
   });
 
-  it("returns empty object for relation not listed in allowedRelations", () => {
+  it('returns empty object for relation not listed in allowedRelations', () => {
     const result = buildOrderBy<TestModel>({
-      sortBy: "unknownRelation.name",
+      sortBy: 'unknownRelation.name',
       allowedRelations: {
         knownRelation: {
-          fields: ["id", "name"],
+          fields: ['id', 'name'],
         },
       },
     });

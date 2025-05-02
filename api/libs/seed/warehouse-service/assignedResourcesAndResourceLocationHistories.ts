@@ -4,7 +4,7 @@ import type {
   Resource,
   ResourceLocation,
   ResourceLocationHistory,
-} from "@prisma/client";
+} from '@prisma/client';
 
 type Props = {
   prisma: PrismaClient;
@@ -54,9 +54,7 @@ const createAssignedResourcesAndResourceLocationHistories = async ({
   }
 
   console.log(`Created (${assignedResources.length}) assignedResources`);
-  console.log(
-    `Created (${locationHistories.length}) resourceLocationHistories`,
-  );
+  console.log(`Created (${locationHistories.length}) resourceLocationHistories`);
 
   return {
     assignedResources,

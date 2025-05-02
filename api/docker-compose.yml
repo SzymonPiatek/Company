@@ -152,6 +152,7 @@ services:
       - ./package.json:/usr/src/app/package.json
       - ./jest.config.ts:/usr/src/app/jest.config.ts
       - ./eslint.config.js:/usr/src/app/eslint.config.js
+      - ./.prettierrc:/usr/src/app/.prettierrc
     env_file:
       - ../envs/.env-api
       - ../envs/.env-db

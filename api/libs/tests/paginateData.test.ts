@@ -1,6 +1,6 @@
-import paginateData from "../helpers/paginateData";
+import paginateData from '../helpers/paginateData';
 
-describe("paginateData", () => {
+describe('paginateData', () => {
   const mockModel = {
     count: jest.fn(),
     findMany: jest.fn(),
@@ -10,7 +10,7 @@ describe("paginateData", () => {
     jest.clearAllMocks();
   });
 
-  it("should use default page and limit when pagination params are undefined", async () => {
+  it('should use default page and limit when pagination params are undefined', async () => {
     mockModel.count.mockResolvedValue(15);
     mockModel.findMany.mockResolvedValue([{ id: 1 }]);
 

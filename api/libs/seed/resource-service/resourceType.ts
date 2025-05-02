@@ -1,4 +1,4 @@
-import type { PrismaClient, ResourceType } from "@prisma/client";
+import type { PrismaClient, ResourceType } from '@prisma/client';
 
 type CreateResourceTypesProps = {
   prisma: PrismaClient;
@@ -6,13 +6,13 @@ type CreateResourceTypesProps = {
 };
 
 export const resourceTypesData = [
-  { name: "Biurko", code: "DESK" },
-  { name: "Fotel", code: "CHAIR" },
-  { name: "Monitor", code: "MONITOR" },
-  { name: "Telewizor", code: "TV" },
-  { name: "Komputer", code: "PC" },
-  { name: "Laptop", code: "LAPTOP" },
-  { name: "Smartfon", code: "MOBILE" },
+  { name: 'Biurko', code: 'DESK' },
+  { name: 'Fotel', code: 'CHAIR' },
+  { name: 'Monitor', code: 'MONITOR' },
+  { name: 'Telewizor', code: 'TV' },
+  { name: 'Komputer', code: 'PC' },
+  { name: 'Laptop', code: 'LAPTOP' },
+  { name: 'Smartfon', code: 'MOBILE' },
 ];
 
 const createResourceTypes = async ({

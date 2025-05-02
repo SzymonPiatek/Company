@@ -1,10 +1,10 @@
-import request from "supertest";
-import app from "../../../app";
-import prisma from "../../../prismaClient";
+import request from 'supertest';
+import app from '../../../app';
+import prisma from '../../../prismaClient';
 
-const baseUrl = "/api/resource/resourceTypes";
+const baseUrl = '/api/resource/resourceTypes';
 
-describe("GET /api/resource/resourceTypes/:id", () => {
+describe('GET /api/resource/resourceTypes/:id', () => {
   const unique = Date.now();
   const typeId = `type-${unique}`;
   const typeName = `Type Name ${unique}`;
@@ -19,8 +19,8 @@ describe("GET /api/resource/resourceTypes/:id", () => {
         code: typeCode,
         resources: {
           create: [
-            { name: "Res A", code: `${typeCode}-001`, isActive: true },
-            { name: "Res B", code: `${typeCode}-002`, isActive: false },
+            { name: 'Res A', code: `${typeCode}-001`, isActive: true },
+            { name: 'Res B', code: `${typeCode}-002`, isActive: false },
           ],
         },
       },
@@ -34,7 +34,7 @@ describe("GET /api/resource/resourceTypes/:id", () => {
     await prisma.resourceType.delete({ where: { id: createdTypeId } });
   });
 
-  it("should return 200 and resource type data if found", async () => {
+  it('should return 200 and resource type data if found', async () => {
     const res = await request(app).get(`${baseUrl}/${createdTypeId}`);
 
     expect(res.status).toBe(200);
@@ -48,22 +48,22 @@ describe("GET /api/resource/resourceTypes/:id", () => {
     expect(res.body.resources).toHaveLength(2);
   });
 
-  it("should return 404 if resource type not found", async () => {
+  it('should return 404 if resource type not found', async () => {
     const res = await request(app).get(`${baseUrl}/non-existent-id`);
 
     expect(res.status).toBe(404);
-    expect(res.body).toEqual({ error: "Resource not found" });
+    expect(res.body).toEqual({ error: 'Resource not found' });
   });
 
-  it("should return 500 on internal error", async () => {
+  it('should return 500 on internal error', async () => {
     const spy = jest
-      .spyOn(prisma.resourceType, "findUnique")
-      .mockRejectedValueOnce(new Error("DB FAIL"));
+      .spyOn(prisma.resourceType, 'findUnique')
+      .mockRejectedValueOnce(new Error('DB FAIL'));
 
     const res = await request(app).get(`${baseUrl}/${createdTypeId}`);
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe("Internal Server Error");
+    expect(res.body.error).toBe('Internal Server Error');
 
     spy.mockRestore();
   });

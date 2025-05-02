@@ -1,10 +1,10 @@
-import type { RequestHandler } from "express";
-import type { User } from "@prisma/client";
-import prisma from "../../../prismaClient";
-import parsePaginationQuery from "@libs/helpers/parsePaginationQuery";
-import paginateData from "@libs/helpers/paginateData";
-import buildQueryConditions from "@libs/helpers/buildQueryConditions";
-import buildOrderBy from "@libs/helpers/buildOrderBy";
+import type { RequestHandler } from 'express';
+import type { User } from '@prisma/client';
+import prisma from '../../../prismaClient';
+import parsePaginationQuery from '@libs/helpers/parsePaginationQuery';
+import paginateData from '@libs/helpers/paginateData';
+import buildQueryConditions from '@libs/helpers/buildQueryConditions';
+import buildOrderBy from '@libs/helpers/buildOrderBy';
 
 type UsersQueryProps = {
   email?: string;
@@ -21,22 +21,13 @@ const getUsersHandler: RequestHandler = async (req, res) => {
     const orderBy = buildOrderBy<User>({
       sortBy: pagination.sortBy,
       sortOrder: pagination.sortOrder,
-      allowedFields: [
-        "id",
-        "email",
-        "firstName",
-        "lastName",
-        "isActive",
-        "createdAt",
-        "updatedAt",
-      ],
+      allowedFields: ['id', 'email', 'firstName', 'lastName', 'isActive', 'createdAt', 'updatedAt'],
     });
 
-    const { email, firstName, lastName, isActive, search } =
-      req.query as UsersQueryProps;
+    const { email, firstName, lastName, isActive, search } = req.query as UsersQueryProps;
 
     const where = buildQueryConditions({
-      fields: ["email", "firstName", "lastName"],
+      fields: ['email', 'firstName', 'lastName'],
       filters: { email, firstName, lastName, isActive },
       search,
     });
@@ -55,7 +46,7 @@ const getUsersHandler: RequestHandler = async (req, res) => {
 
     res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error", details: error });
+    res.status(500).json({ error: 'Internal Server Error', details: error });
   }
 };
 

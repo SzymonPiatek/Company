@@ -1,10 +1,10 @@
-import request from "supertest";
-import app from "../../../app";
-import prisma from "../../../prismaClient";
+import request from 'supertest';
+import app from '../../../app';
+import prisma from '../../../prismaClient';
 
-const baseUrl = "/api/resource/resourceTypes";
+const baseUrl = '/api/resource/resourceTypes';
 
-describe("PATCH /api/resource/resourceTypes/:id", () => {
+describe('PATCH /api/resource/resourceTypes/:id', () => {
   const unique = Date.now();
   const typeName = `Type ${unique}`;
   const typeCode = `CODE-${unique}`;
@@ -19,8 +19,8 @@ describe("PATCH /api/resource/resourceTypes/:id", () => {
         code: typeCode,
         resources: {
           create: [
-            { name: "Res1", code: `${typeCode}-000001`, isActive: true },
-            { name: "Res2", code: `${typeCode}-000002`, isActive: false },
+            { name: 'Res1', code: `${typeCode}-000001`, isActive: true },
+            { name: 'Res2', code: `${typeCode}-000002`, isActive: false },
           ],
         },
       },
@@ -43,7 +43,7 @@ describe("PATCH /api/resource/resourceTypes/:id", () => {
     });
   });
 
-  it("should update a resource type and return 200", async () => {
+  it('should update a resource type and return 200', async () => {
     const updatedName = `Updated ${typeName}`;
     const updatedCode = `UPDATED-${unique}`;
 
@@ -67,17 +67,17 @@ describe("PATCH /api/resource/resourceTypes/:id", () => {
     }
   });
 
-  it("should return 404 if resource type not found", async () => {
+  it('should return 404 if resource type not found', async () => {
     const res = await request(app).patch(`${baseUrl}/non-existent-id`).send({
-      name: "Whatever",
-      code: "WHATEVER-CODE",
+      name: 'Whatever',
+      code: 'WHATEVER-CODE',
     });
 
     expect(res.status).toBe(404);
-    expect(res.body).toEqual({ error: "ResourceType not found" });
+    expect(res.body).toEqual({ error: 'ResourceType not found' });
   });
 
-  it("should return 409 if name is already taken", async () => {
+  it('should return 409 if name is already taken', async () => {
     const res = await request(app)
       .patch(`${baseUrl}/${typeId}`)
       .send({
@@ -86,10 +86,10 @@ describe("PATCH /api/resource/resourceTypes/:id", () => {
       });
 
     expect(res.status).toBe(409);
-    expect(res.body.error).toBe("Resource name already exists");
+    expect(res.body.error).toBe('Resource name already exists');
   });
 
-  it("should return 409 if code is already taken", async () => {
+  it('should return 409 if code is already taken', async () => {
     const res = await request(app)
       .patch(`${baseUrl}/${typeId}`)
       .send({
@@ -98,30 +98,30 @@ describe("PATCH /api/resource/resourceTypes/:id", () => {
       });
 
     expect(res.status).toBe(409);
-    expect(res.body.error).toBe("Resource code already exists");
+    expect(res.body.error).toBe('Resource code already exists');
   });
 
-  it("should return 500 on internal error", async () => {
+  it('should return 500 on internal error', async () => {
     const originalError = console.error;
     console.error = jest.fn();
 
     const spy = jest
-      .spyOn(prisma.resourceType, "findUnique")
-      .mockRejectedValueOnce(new Error("DB FAIL"));
+      .spyOn(prisma.resourceType, 'findUnique')
+      .mockRejectedValueOnce(new Error('DB FAIL'));
 
     const res = await request(app).patch(`${baseUrl}/${typeId}`).send({
-      name: "Should Fail",
-      code: "FAIL-CODE",
+      name: 'Should Fail',
+      code: 'FAIL-CODE',
     });
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe("Internal Server Error");
+    expect(res.body.error).toBe('Internal Server Error');
 
     spy.mockRestore();
     console.error = originalError;
   });
 
-  it("should update name only if code did not change", async () => {
+  it('should update name only if code did not change', async () => {
     const sameCode = `SAME-${unique}`;
     const newName = `New Name ${unique}`;
 
@@ -152,7 +152,7 @@ describe("PATCH /api/resource/resourceTypes/:id", () => {
     await prisma.resourceType.delete({ where: { id: type.id } });
   });
 
-  it("should assign default numeric part if resource code is malformed", async () => {
+  it('should assign default numeric part if resource code is malformed', async () => {
     const weirdCode = `STRANGE${unique}`;
     const correctedCodePrefix = `FIXED-${unique}`;
     const resType = await prisma.resourceType.create({
@@ -160,7 +160,7 @@ describe("PATCH /api/resource/resourceTypes/:id", () => {
         name: `Malformed ${unique}`,
         code: weirdCode,
         resources: {
-          create: [{ name: "StrangeRes", code: "BADCODE", isActive: true }],
+          create: [{ name: 'StrangeRes', code: 'BADCODE', isActive: true }],
         },
       },
     });

@@ -1,5 +1,5 @@
-import type { PrismaClient, Resource } from "@prisma/client";
-import { resourceTypesData } from "./resourceType";
+import type { PrismaClient, Resource } from '@prisma/client';
+import { resourceTypesData } from './resourceType';
 
 type CreateResourcesProps = {
   prisma: PrismaClient;
@@ -27,7 +27,7 @@ const createResources = async ({
 
   const filteredResourceTypes = extendedResourceTypes.filter(
     (t): t is { name: string; code: string; typeId: string } =>
-      typeof t.typeId === "string" && t.typeId.length > 0,
+      typeof t.typeId === 'string' && t.typeId.length > 0,
   );
 
   const allResources: Resource[] = [];

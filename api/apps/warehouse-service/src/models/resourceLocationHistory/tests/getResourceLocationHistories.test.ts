@@ -1,11 +1,11 @@
-import request from "supertest";
-import prisma from "../../../prismaClient";
-import app from "../../../app";
-import { v4 as uuid } from "uuid";
+import request from 'supertest';
+import prisma from '../../../prismaClient';
+import app from '../../../app';
+import { v4 as uuid } from 'uuid';
 
-const baseUrl = "/api/warehouse/resourceLocationHistories";
+const baseUrl = '/api/warehouse/resourceLocationHistories';
 
-describe("GET /resourceLocationHistories", () => {
+describe('GET /resourceLocationHistories', () => {
   let fromLocationId: string;
   let toLocationId: string;
   let resourceId: string;
@@ -21,8 +21,8 @@ describe("GET /resourceLocationHistories", () => {
 
     await prisma.resourceLocation.createMany({
       data: [
-        { id: fromLocationId, name: "From" },
-        { id: toLocationId, name: "To" },
+        { id: fromLocationId, name: 'From' },
+        { id: toLocationId, name: 'To' },
       ],
     });
 
@@ -35,37 +35,37 @@ describe("GET /resourceLocationHistories", () => {
     });
   });
 
-  it("returns 200 and paginated history with locations", async () => {
+  it('returns 200 and paginated history with locations', async () => {
     const res = await request(app).get(baseUrl);
 
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body.data)).toBe(true);
-    expect(res.body.data[0]).toHaveProperty("fromLocation");
-    expect(res.body.data[0]).toHaveProperty("toLocation");
+    expect(res.body.data[0]).toHaveProperty('fromLocation');
+    expect(res.body.data[0]).toHaveProperty('toLocation');
   });
 
-  it("filters by resourceId", async () => {
+  it('filters by resourceId', async () => {
     const res = await request(app).get(`${baseUrl}?resourceId=${resourceId}`);
 
     expect(res.status).toBe(200);
     expect(res.body.data[0].resourceId).toBe(resourceId);
   });
 
-  it("returns empty array for unmatched filter", async () => {
+  it('returns empty array for unmatched filter', async () => {
     const res = await request(app).get(`${baseUrl}?resourceId=nonexistent`);
     expect(res.status).toBe(200);
     expect(res.body.data).toEqual([]);
   });
 
-  it("returns 500 on internal error", async () => {
+  it('returns 500 on internal error', async () => {
     const spy = jest
-      .spyOn(prisma.resourceLocationHistory, "findMany")
-      .mockRejectedValueOnce(new Error("Fail"));
+      .spyOn(prisma.resourceLocationHistory, 'findMany')
+      .mockRejectedValueOnce(new Error('Fail'));
 
     const res = await request(app).get(baseUrl);
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe("Internal Server Error");
+    expect(res.body.error).toBe('Internal Server Error');
 
     spy.mockRestore();
   });

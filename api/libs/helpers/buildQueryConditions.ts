@@ -2,10 +2,7 @@ type FieldConditions = {
   [field: string]: string | number | boolean | undefined;
 };
 
-type QueryCondition = Record<
-  string,
-  string | number | boolean | object | undefined
->;
+type QueryCondition = Record<string, string | number | boolean | object | undefined>;
 
 type SearchableWhereOptions = {
   fields: string[];
@@ -23,17 +20,17 @@ const buildQueryConditions = ({
   for (const [key, value] of Object.entries(filters)) {
     if (value === undefined) continue;
 
-    if (value === "true" || value === "false") {
+    if (value === 'true' || value === 'false') {
       andConditions.push({
         [key]: {
-          equals: value === "true",
+          equals: value === 'true',
         },
       });
     } else {
       andConditions.push({
         [key]: {
           contains: String(value),
-          mode: "insensitive",
+          mode: 'insensitive',
         },
       });
     }
@@ -49,7 +46,7 @@ const buildQueryConditions = ({
         orConditions.push({
           [field]: {
             contains: word,
-            mode: "insensitive",
+            mode: 'insensitive',
           },
         });
       }

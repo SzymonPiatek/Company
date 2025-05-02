@@ -1,4 +1,4 @@
-import type { PrismaClient, ResourceLocation } from "@prisma/client";
+import type { PrismaClient, ResourceLocation } from '@prisma/client';
 
 type CreateResourceLocationsProps = {
   prisma: PrismaClient;
@@ -6,10 +6,10 @@ type CreateResourceLocationsProps = {
 };
 
 export const resourceLocations = [
-  { name: "Pokój 1", description: "Pokój pracowniczy" },
-  { name: "Pokój 2", description: "Pokój pracowniczy" },
-  { name: "Pokój 3", description: "Pokój pracowniczy" },
-  { name: "Magazyn", description: "Pomieszczenie magazynowe" },
+  { name: 'Pokój 1', description: 'Pokój pracowniczy' },
+  { name: 'Pokój 2', description: 'Pokój pracowniczy' },
+  { name: 'Pokój 3', description: 'Pokój pracowniczy' },
+  { name: 'Magazyn', description: 'Pomieszczenie magazynowe' },
 ];
 
 const createResourceLocations = async ({
