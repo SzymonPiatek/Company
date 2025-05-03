@@ -34,11 +34,19 @@ const loginHandler: RequestHandler = async (req, res) => {
     const accessToken = generateAccessToken({ userId: user.id });
     const refreshToken = generateRefreshToken({ userId: user.id });
 
-    res.status(200).json({
-      user: { ...user, password: undefined },
-      accessToken,
-      refreshToken,
-    });
+    res
+      .cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/api/auth/refresh',
+        maxAge: 1000 * 60 * 60 * 24,
+      })
+      .status(200)
+      .json({
+        user: { ...user, password: undefined },
+        accessToken,
+      });
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error', details: error });
   }

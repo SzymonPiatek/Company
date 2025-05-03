@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { verify } from 'jsonwebtoken';
+import { verify, TokenExpiredError } from 'jsonwebtoken';
+import { generateAccessToken, generateRefreshToken } from '@libs/helpers/jwt';
 
-type VerifiedTokenPayload = { sub: string; [key: string]: any };
+type VerifiedTokenPayload = { userId: string; [key: string]: any };
 
 export interface AuthenticatedRequest extends Request {
   user?: VerifiedTokenPayload;
@@ -9,26 +10,53 @@ export interface AuthenticatedRequest extends Request {
 
 const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
-
-  if (!authHeader?.startsWith('Bearer ')) {
-    res.status(401).json({ message: 'Missing or invalid token' });
-    return;
-  }
-
-  const token = authHeader.split(' ')[1];
+  const accessToken = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
   try {
-    const payload = verify(token, process.env.ACCESS_TOKEN_SECRET!) as VerifiedTokenPayload;
+    if (!accessToken) throw new Error('No access token');
 
-    if (!payload.sub) {
-      res.status(403).json({ message: 'Invalid token: missing subject' });
+    (req as AuthenticatedRequest).user = verify(
+      accessToken,
+      process.env.ACCESS_TOKEN_SECRET!,
+    ) as VerifiedTokenPayload;
+    return next();
+  } catch (err) {
+    if (!(err instanceof TokenExpiredError)) {
+      res.status(403).json({ message: 'Invalid access token' });
       return;
     }
 
-    (req as AuthenticatedRequest).user = payload;
-    next();
-  } catch {
-    res.status(403).json({ message: 'Token verification failed' });
+    const refreshToken = req.cookies?.refreshToken;
+
+    if (!refreshToken) {
+      res.status(401).json({ message: 'Missing refresh token' });
+      return;
+    }
+
+    try {
+      const refreshPayload = verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET!,
+      ) as VerifiedTokenPayload;
+
+      const newAccessToken = generateAccessToken({ userId: refreshPayload.userId });
+      const newRefreshToken = generateRefreshToken({ userId: refreshPayload.userId });
+
+      res.cookie('refreshToken', newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/api/auth/refresh',
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+      });
+
+      res.setHeader('Authorization', `Bearer ${newAccessToken}`);
+      (req as AuthenticatedRequest).user = { userId: refreshPayload.userId };
+      return next();
+    } catch {
+      res.status(403).json({ message: 'Invalid refresh token' });
+      return;
+    }
   }
 };
 
