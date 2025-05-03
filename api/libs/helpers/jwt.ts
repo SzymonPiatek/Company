@@ -17,7 +17,7 @@ const accessTokenExp = process.env.ACCESS_TOKEN_EXP! as SignOptions['expiresIn']
 const refreshTokenExp = process.env.REFRESH_TOKEN_EXP! as SignOptions['expiresIn'];
 
 const generateToken = ({ userId, secret, exp }: GenerateTokenProps): string => {
-  return jwt.sign({ userId }, secret, { expiresIn: exp });
+  return jwt.sign({ sub: userId }, secret, { expiresIn: exp });
 };
 
 export const generateAccessToken = ({ userId }: GenerateAccessOrRefreshTokenProps) => {
