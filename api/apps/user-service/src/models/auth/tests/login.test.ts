@@ -1,35 +1,38 @@
 import request from 'supertest';
 import app from '../../../app';
-import { cleanupUsers, createTestUser } from '../../../tests/setup';
 import prisma from '../../../prismaClient';
+import { cleanupUsers, createTestUser } from '@libs/tests/setup';
 
 const baseUrl = '/api/user/auth/login';
+const testEmail = 'testuser@example.com';
+const testPassword = 'Test1234!';
 
 describe('POST /auth/login', () => {
   beforeEach(async () => {
-    await cleanupUsers();
-    await createTestUser();
+    await cleanupUsers(prisma, [testEmail]);
+    await createTestUser(prisma, { email: testEmail, password: testPassword });
   });
 
   afterAll(async () => {
-    await cleanupUsers();
+    await cleanupUsers(prisma, [testEmail]);
   });
 
   it('should login with correct credentials', async () => {
     const res = await request(app).post(baseUrl).send({
-      email: 'testuser@example.com',
-      password: 'Test1234!',
+      email: testEmail,
+      password: testPassword,
     });
 
     expect(res.status).toBe(200);
     expect(res.body.user).toBeDefined();
-    expect(res.body.user.email).toBe('testuser@example.com');
+    expect(res.body.user.email).toBe(testEmail);
     expect(res.body.user.password).toBeUndefined();
+    expect(res.body.accessToken).toBeDefined();
   });
 
   it('should fail with wrong password', async () => {
     const res = await request(app).post(baseUrl).send({
-      email: 'testuser@example.com',
+      email: testEmail,
       password: 'WrongPass!',
     });
 
@@ -40,7 +43,7 @@ describe('POST /auth/login', () => {
   it('should fail if user does not exist', async () => {
     const res = await request(app).post(baseUrl).send({
       email: 'nonexistent@example.com',
-      password: 'Anything',
+      password: 'DoesntMatter123',
     });
 
     expect(res.status).toBe(401);
@@ -61,8 +64,8 @@ describe('POST /auth/login', () => {
     const spy = jest.spyOn(prisma.user, 'findUnique').mockRejectedValueOnce(new Error('DB error'));
 
     const res = await request(app).post(baseUrl).send({
-      email: 'testuser@example.com',
-      password: 'Test1234!',
+      email: testEmail,
+      password: testPassword,
     });
 
     expect(res.status).toBe(500);

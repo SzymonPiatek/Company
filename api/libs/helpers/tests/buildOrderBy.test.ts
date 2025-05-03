@@ -1,4 +1,4 @@
-import buildOrderBy from '../helpers/buildOrderBy';
+import buildOrderBy from '../buildOrderBy';
 
 describe('buildOrderBy', () => {
   type TestModel = {

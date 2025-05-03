@@ -1,64 +1,64 @@
 import request from 'supertest';
 import app from '../../../app';
 import prisma from '../../../prismaClient';
-import { User } from '@prisma/client';
 import { hashPassword } from '@libs/helpers/bcrypt';
+import type { User } from '@prisma/client';
 
 const baseUrl = '/api/user/users';
-const loginUrl = `/api/user/auth/login`;
+const loginUrl = '/api/user/auth/login';
 
 describe('GET /users', () => {
   let testUserId: string;
   let accessToken: string;
+
+  const testPassword = 'securePass123';
+  const getUserEmail = 'getuser@example.com';
 
   const testUsers = [
     {
       email: 'john.doe@example.com',
       firstName: 'John',
       lastName: 'Doe',
-      password: '',
       isActive: true,
     },
     {
       email: 'jane.smith@example.com',
       firstName: 'Jane',
       lastName: 'Smith',
-      password: '',
       isActive: true,
     },
     {
       email: 'inactive.user@example.com',
       firstName: 'Inactive',
       lastName: 'User',
-      password: '',
       isActive: false,
     },
   ];
 
-  beforeAll(async () => {
-    const hashedPassword = await hashPassword('securePass123');
+  const allTestEmails = [...testUsers.map((u) => u.email), getUserEmail];
 
-    const finalUsers = testUsers.map((user) => ({
+  beforeAll(async () => {
+    const hashedPassword = await hashPassword(testPassword);
+
+    await prisma.user.deleteMany({
+      where: {
+        email: { in: allTestEmails },
+      },
+    });
+
+    const usersWithPasswords = testUsers.map((user) => ({
       ...user,
       password: hashedPassword,
     }));
 
-    await prisma.user.deleteMany({
-      where: {
-        email: {
-          in: testUsers.map((u) => u.email),
-        },
-      },
-    });
-
     await prisma.user.createMany({
-      data: finalUsers,
+      data: usersWithPasswords,
       skipDuplicates: true,
     });
 
-    const createdUser = await prisma.user.create({
+    const getUser = await prisma.user.create({
       data: {
-        email: 'getuser@example.com',
+        email: getUserEmail,
         firstName: 'Get',
         lastName: 'User',
         password: hashedPassword,
@@ -66,23 +66,20 @@ describe('GET /users', () => {
       },
     });
 
-    testUserId = createdUser.id;
+    testUserId = getUser.id;
 
     const loginRes = await request(app).post(loginUrl).send({
-      email: 'getuser@example.com',
-      password: 'securePass123',
+      email: getUserEmail,
+      password: testPassword,
     });
 
     accessToken = loginRes.body.accessToken;
   });
 
   afterAll(async () => {
-    await prisma.user.delete({ where: { id: testUserId } });
     await prisma.user.deleteMany({
       where: {
-        email: {
-          in: testUsers.map((u) => u.email),
-        },
+        email: { in: allTestEmails },
       },
     });
   });
@@ -94,9 +91,10 @@ describe('GET /users', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBeLessThanOrEqual(2);
-    expect(res.body.meta).toHaveProperty('total');
-    expect(res.body.meta).toHaveProperty('page', 1);
-    expect(res.body.meta).toHaveProperty('limit', 2);
+    expect(res.body.meta).toMatchObject({
+      page: 1,
+      limit: 2,
+    });
 
     res.body.data.forEach((user: User & { password?: string }) => {
       expect(user.password).toBeUndefined();
@@ -123,7 +121,7 @@ describe('GET /users', () => {
     expect(res.body.data[0].lastName.toLowerCase()).toContain('smith');
   });
 
-  it('should filter by isActive', async () => {
+  it('should filter by isActive=false', async () => {
     const res = await request(app)
       .get(`${baseUrl}?isActive=false`)
       .set('Authorization', `Bearer ${accessToken}`);

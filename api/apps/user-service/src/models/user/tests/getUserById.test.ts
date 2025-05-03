@@ -1,36 +1,30 @@
 import request from 'supertest';
 import prisma from '../../../prismaClient';
 import app from '../../../app';
-import { hashPassword } from '@libs/helpers/bcrypt';
+import { createTestUser, loginTestUser } from '@libs/tests/setup';
 
 const baseUrl = (id: string) => `/api/user/users/${id}`;
-const loginUrl = `/api/user/auth/login`;
 
 describe('GET /users/:id', () => {
   let testUserId: string;
   let accessToken: string;
+  const testEmail = 'getuser@example.com';
+  const testPassword = 'Test1234!';
 
   beforeAll(async () => {
-    const hashedPassword = await hashPassword('securePass123');
-
-    const createdUser = await prisma.user.create({
-      data: {
-        email: 'getuser@example.com',
-        firstName: 'Get',
-        lastName: 'User',
-        password: hashedPassword,
-        isActive: true,
-      },
+    const user = await createTestUser(prisma, {
+      email: testEmail,
+      password: testPassword,
+      firstName: 'Get',
+      lastName: 'User',
     });
 
-    testUserId = createdUser.id;
-
-    const loginRes = await request(app).post(loginUrl).send({
-      email: 'getuser@example.com',
-      password: 'securePass123',
+    testUserId = user.id;
+    accessToken = await loginTestUser({
+      api: request(app),
+      email: testEmail,
+      password: testPassword,
     });
-
-    accessToken = loginRes.body.accessToken;
   });
 
   afterAll(async () => {
@@ -45,7 +39,7 @@ describe('GET /users/:id', () => {
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({
       id: testUserId,
-      email: 'getuser@example.com',
+      email: testEmail,
       firstName: 'Get',
       lastName: 'User',
     });
