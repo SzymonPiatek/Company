@@ -37,17 +37,37 @@ describe('JWT token generation', () => {
     expect(result).toBe('refresh-token');
   });
 
-  it('should throw if secret is undefined at runtime', () => {
-    const original = process.env.ACCESS_TOKEN_SECRET;
+  it('should throw if access token secret is undefined at runtime', () => {
+    const originalSecret = process.env.ACCESS_TOKEN_SECRET;
+    const originalExp = process.env.ACCESS_TOKEN_EXP;
+
     delete process.env.ACCESS_TOKEN_SECRET;
 
     jest.resetModules();
+    const { generateAccessToken } = require('../jwt');
 
     expect(() => {
-      const { generateAccessToken } = require('../jwt');
-      generateAccessToken({ userId: '789' });
-    }).toThrow();
+      generateAccessToken({ userId: 'xyz' });
+    }).toThrow('Missing ACCESS_TOKEN_SECRET or EXP');
 
-    process.env.ACCESS_TOKEN_SECRET = original;
+    process.env.ACCESS_TOKEN_SECRET = originalSecret;
+    process.env.ACCESS_TOKEN_EXP = originalExp;
+  });
+
+  it('should throw if refresh token secret is undefined at runtime', () => {
+    const originalSecret = process.env.REFRESH_TOKEN_SECRET;
+    const originalExp = process.env.REFRESH_TOKEN_EXP;
+
+    delete process.env.REFRESH_TOKEN_SECRET;
+
+    jest.resetModules();
+    const { generateRefreshToken } = require('../jwt');
+
+    expect(() => {
+      generateRefreshToken({ userId: 'xyz' });
+    }).toThrow('Missing REFRESH_TOKEN_SECRET or EXP');
+
+    process.env.REFRESH_TOKEN_SECRET = originalSecret;
+    process.env.REFRESH_TOKEN_EXP = originalExp;
   });
 });

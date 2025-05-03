@@ -1,4 +1,4 @@
-import jwt, { type Secret, type SignOptions } from 'jsonwebtoken';
+import { sign, type Secret, type SignOptions } from 'jsonwebtoken';
 
 type GenerateTokenProps = {
   userId: string;
@@ -11,7 +11,7 @@ type GenerateAccessOrRefreshTokenProps = {
 };
 
 const generateToken = ({ userId, secret, exp }: GenerateTokenProps): string => {
-  return jwt.sign({ sub: userId }, secret, { expiresIn: exp });
+  return sign({ sub: userId }, secret, { expiresIn: exp });
 };
 
 export const generateAccessToken = ({ userId }: GenerateAccessOrRefreshTokenProps) => {
