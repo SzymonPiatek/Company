@@ -3,7 +3,7 @@ import prisma from '../../../prismaClient';
 import app from '../../../app';
 import { comparePassword } from '@libs/helpers/bcrypt';
 import { cleanupUsers, createTestUser, loginTestUser } from '@libs/tests/setup';
-import { User } from '@prisma/client';
+import type { User } from '@prisma/client';
 
 const baseUrl = (id: string) => `/api/user/users/${id}`;
 const testEmail = 'getuser@example.com';
@@ -15,25 +15,31 @@ describe('PATCH /users/:id', () => {
   let accessToken: string;
   let updateUser: User;
 
+  const patchRequest = (id: string, body: object) =>
+    request(app).patch(baseUrl(id)).set('Authorization', `Bearer ${accessToken}`).send(body);
+
   beforeAll(async () => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-
-    await prisma.user.deleteMany({
-      where: {
-        email: { in: [testEmail, updateUserEmail, existingUserEmail] },
-      },
-    });
-
-    await createTestUser(prisma, {
+    const user = await createTestUser(prisma, {
       email: testEmail,
       password: testPassword,
       firstName: 'Get',
+      lastName: 'User',
     });
 
     accessToken = await loginTestUser({
       api: request(app),
       email: testEmail,
       password: testPassword,
+    });
+  });
+
+  beforeAll(async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    await prisma.user.deleteMany({
+      where: {
+        email: { in: [updateUserEmail, existingUserEmail] },
+      },
     });
 
     updateUser = await createTestUser(prisma, {
@@ -54,13 +60,7 @@ describe('PATCH /users/:id', () => {
   });
 
   it('should update user info without changing password', async () => {
-    const res = await request(app)
-      .patch(baseUrl(updateUser.id))
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        firstName: 'Updated',
-        lastName: 'User',
-      });
+    const res = await patchRequest(updateUser.id, { firstName: 'Updated', lastName: 'User' });
 
     expect(res.status).toBe(200);
     expect(res.body.firstName).toBe('Updated');
@@ -68,12 +68,9 @@ describe('PATCH /users/:id', () => {
   });
 
   it('should update and hash new password', async () => {
-    const res = await request(app)
-      .patch(baseUrl(updateUser.id))
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        password: 'NewSecret123!',
-      });
+    const res = await patchRequest(updateUser.id, {
+      password: 'NewSecret123!',
+    });
 
     expect(res.status).toBe(200);
 
@@ -83,24 +80,18 @@ describe('PATCH /users/:id', () => {
   });
 
   it('should return 409 if email already exists on another user', async () => {
-    const res = await request(app)
-      .patch(baseUrl(updateUser.id))
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        email: existingUserEmail,
-      });
+    const res = await patchRequest(updateUser.id, {
+      email: existingUserEmail,
+    });
 
     expect(res.status).toBe(409);
     expect(res.body.error).toBe('Email is already taken by another user');
   });
 
   it('should return 500 if user does not exist', async () => {
-    const res = await request(app)
-      .patch(baseUrl('00000000-0000-0000-0000-000000000000'))
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        firstName: 'Ghost',
-      });
+    const res = await patchRequest('00000000-0000-0000-0000-000000000000', {
+      firstName: 'Ghost',
+    });
 
     expect(res.status).toBe(500);
     expect(res.body.error).toBe('Failed to update user');
@@ -109,12 +100,7 @@ describe('PATCH /users/:id', () => {
   it('should return 500 on prisma failure', async () => {
     const spy = jest.spyOn(prisma.user, 'update').mockRejectedValueOnce(new Error('Mock DB fail'));
 
-    const res = await request(app)
-      .patch(baseUrl(updateUser.id))
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        firstName: 'Boom',
-      });
+    const res = await patchRequest(updateUser.id, { firstName: 'Boom' });
 
     expect(res.status).toBe(500);
     expect(res.body.error).toBe('Failed to update user');

@@ -4,12 +4,15 @@ import app from '../../../app';
 import { createTestUser, loginTestUser } from '@libs/tests/setup';
 
 const baseUrl = (id: string) => `/api/user/users/${id}`;
+const testEmail = 'getuser@example.com';
+const testPassword = 'Test1234!';
 
 describe('GET /users/:id', () => {
   let testUserId: string;
   let accessToken: string;
-  const testEmail = 'getuser@example.com';
-  const testPassword = 'Test1234!';
+
+  const getRequest = (id: string) =>
+    request(app).get(baseUrl(id)).set('Authorization', `Bearer ${accessToken}`);
 
   beforeAll(async () => {
     const user = await createTestUser(prisma, {
@@ -32,9 +35,7 @@ describe('GET /users/:id', () => {
   });
 
   it('should return user by id', async () => {
-    const res = await request(app)
-      .get(baseUrl(testUserId))
-      .set('Authorization', `Bearer ${accessToken}`);
+    const res = await getRequest(testUserId);
 
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({
@@ -50,9 +51,7 @@ describe('GET /users/:id', () => {
   it('should return 404 if user not found', async () => {
     const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
-    const res = await request(app)
-      .get(baseUrl(nonExistentId))
-      .set('Authorization', `Bearer ${accessToken}`);
+    const res = await getRequest(nonExistentId);
 
     expect(res.status).toBe(404);
     expect(res.body.error).toBe('User not found');
@@ -61,9 +60,7 @@ describe('GET /users/:id', () => {
   it('should return 500 on prisma error', async () => {
     const spy = jest.spyOn(prisma.user, 'findUnique').mockRejectedValueOnce(new Error('DB broke'));
 
-    const res = await request(app)
-      .get(baseUrl('fake-id'))
-      .set('Authorization', `Bearer ${accessToken}`);
+    const res = await getRequest('fake-id');
 
     expect(res.status).toBe(500);
     expect(res.body.error).toBe('Internal Server Error');

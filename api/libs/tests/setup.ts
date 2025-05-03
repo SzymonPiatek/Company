@@ -32,10 +32,7 @@ export const createTestUser = async (
   });
 };
 
-export const cleanupUsers = async (
-  prisma: PrismaClient,
-  emails: string[] = ['testuser@example.com'],
-) => {
+export const cleanupUsers = async (prisma: PrismaClient, emails: string[]) => {
   await prisma.user.deleteMany({
     where: {
       email: {
