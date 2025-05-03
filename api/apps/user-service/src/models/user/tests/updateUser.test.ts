@@ -19,7 +19,7 @@ describe('PATCH /users/:id', () => {
     request(app).patch(baseUrl(id)).set('Authorization', `Bearer ${accessToken}`).send(body);
 
   beforeAll(async () => {
-    const user = await createTestUser(prisma, {
+    await createTestUser(prisma, {
       email: testEmail,
       password: testPassword,
       firstName: 'Get',
