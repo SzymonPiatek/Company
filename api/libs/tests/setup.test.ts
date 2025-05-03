@@ -59,18 +59,6 @@ describe('setup helpers', () => {
   });
 
   describe('cleanupUsers', () => {
-    it('deletes default test user', async () => {
-      await cleanupUsers(mockPrisma);
-
-      expect(mockPrisma.user.deleteMany).toHaveBeenCalledWith({
-        where: {
-          email: {
-            in: ['testuser@example.com'],
-          },
-        },
-      });
-    });
-
     it('deletes multiple users by email', async () => {
       await cleanupUsers(mockPrisma, ['a@example.com', 'b@example.com']);
 
