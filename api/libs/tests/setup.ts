@@ -48,7 +48,7 @@ export const cleanupUsers = async (
 export const loginTestUser = async ({
   api,
   email,
-  password = 'securePass123',
+  password,
 }: {
   api: { post: (url: string) => Test };
   email: string;
