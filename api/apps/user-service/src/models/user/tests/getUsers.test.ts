@@ -8,7 +8,6 @@ const baseUrl = '/api/user/users';
 const loginUrl = '/api/user/auth/login';
 
 describe('GET /users', () => {
-  let testUserId: string;
   let accessToken: string;
 
   const testPassword = 'securePass123';
@@ -56,7 +55,7 @@ describe('GET /users', () => {
       skipDuplicates: true,
     });
 
-    const getUser = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: getUserEmail,
         firstName: 'Get',
@@ -65,8 +64,6 @@ describe('GET /users', () => {
         isActive: true,
       },
     });
-
-    testUserId = getUser.id;
 
     const loginRes = await request(app).post(loginUrl).send({
       email: getUserEmail,

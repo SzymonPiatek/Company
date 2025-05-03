@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { verify, TokenExpiredError } from 'jsonwebtoken';
 import { generateAccessToken, generateRefreshToken } from '@libs/helpers/jwt';
 
-type VerifiedTokenPayload = { userId: string; [key: string]: any };
+type VerifiedTokenPayload = { userId: string; iat?: number; exp?: number };
 
 export interface AuthenticatedRequest extends Request {
   user?: VerifiedTokenPayload;

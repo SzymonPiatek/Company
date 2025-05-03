@@ -10,28 +10,32 @@ type GenerateAccessOrRefreshTokenProps = {
   userId: string;
 };
 
-const accessTokenSecret: Secret = process.env.ACCESS_TOKEN_SECRET!;
-const refreshTokenSecret: Secret = process.env.REFRESH_TOKEN_SECRET!;
-
-const accessTokenExp = process.env.ACCESS_TOKEN_EXP! as SignOptions['expiresIn'];
-const refreshTokenExp = process.env.REFRESH_TOKEN_EXP! as SignOptions['expiresIn'];
-
 const generateToken = ({ userId, secret, exp }: GenerateTokenProps): string => {
   return jwt.sign({ sub: userId }, secret, { expiresIn: exp });
 };
 
 export const generateAccessToken = ({ userId }: GenerateAccessOrRefreshTokenProps) => {
+  const secret = process.env.ACCESS_TOKEN_SECRET;
+  const exp = process.env.ACCESS_TOKEN_EXP;
+
+  if (!secret || !exp) throw new Error('Missing ACCESS_TOKEN_SECRET or EXP');
+
   return generateToken({
     userId,
-    secret: accessTokenSecret,
-    exp: accessTokenExp,
+    secret,
+    exp: exp as SignOptions['expiresIn'],
   });
 };
 
 export const generateRefreshToken = ({ userId }: GenerateAccessOrRefreshTokenProps) => {
+  const secret = process.env.REFRESH_TOKEN_SECRET;
+  const exp = process.env.REFRESH_TOKEN_EXP;
+
+  if (!secret || !exp) throw new Error('Missing REFRESH_TOKEN_SECRET or EXP');
+
   return generateToken({
     userId,
-    secret: refreshTokenSecret,
-    exp: refreshTokenExp,
+    secret,
+    exp: exp as SignOptions['expiresIn'],
   });
 };

@@ -1,17 +1,18 @@
+jest.mock('jsonwebtoken');
+
+process.env.ACCESS_TOKEN_SECRET = 'test-access-secret';
+process.env.REFRESH_TOKEN_SECRET = 'test-refresh-secret';
+process.env.ACCESS_TOKEN_EXP = '15m';
+process.env.REFRESH_TOKEN_EXP = '7d';
+
 import { sign } from 'jsonwebtoken';
 import { generateAccessToken, generateRefreshToken } from '../jwt';
-
-jest.mock('jsonwebtoken');
 
 describe('JWT token generation', () => {
   const mockSign = sign as jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.ACCESS_TOKEN_SECRET = 'test-access-secret';
-    process.env.REFRESH_TOKEN_SECRET = 'test-refresh-secret';
-    process.env.ACCESS_TOKEN_EXP = '15m';
-    process.env.REFRESH_TOKEN_EXP = '7d';
   });
 
   it('should generate access token with correct params', () => {
@@ -36,9 +37,17 @@ describe('JWT token generation', () => {
     expect(result).toBe('refresh-token');
   });
 
-  it('should throw if secret is undefined', () => {
+  it('should throw if secret is undefined at runtime', () => {
+    const original = process.env.ACCESS_TOKEN_SECRET;
     delete process.env.ACCESS_TOKEN_SECRET;
 
-    expect(() => generateAccessToken({ userId: '789' })).toThrow();
+    jest.resetModules();
+
+    expect(() => {
+      const { generateAccessToken } = require('../jwt');
+      generateAccessToken({ userId: '789' });
+    }).toThrow();
+
+    process.env.ACCESS_TOKEN_SECRET = original;
   });
 });

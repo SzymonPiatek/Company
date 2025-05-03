@@ -8,7 +8,10 @@ export default {
     '^@libs/(.*)$': '<rootDir>/libs/$1',
   },
   rootDir: './',
-  testMatch: ['<rootDir>/libs/tests/**/*.test.ts', '<rootDir>/apps/**/src/**/tests/**/*.test.ts'],
+  testMatch: [
+    '<rootDir>/libs/**/tests/**/*.test.ts',
+    '<rootDir>/apps/**/src/**/tests/**/*.test.ts',
+  ],
   coverageThreshold: {
     global: {
       branches: 80,
