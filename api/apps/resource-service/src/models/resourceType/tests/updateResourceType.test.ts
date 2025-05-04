@@ -165,4 +165,50 @@ describe('PATCH /api/resource/resourceTypes/:id', () => {
 
     await prisma.resourceType.delete({ where: { id: type.id } });
   });
+
+  it('should assign default numeric part if resource code is malformed', async () => {
+    const malformedCode = `MALFORMED-${unique}`;
+    const correctedCodePrefix = `FIXED-${unique}`;
+
+    const malformedType = await prisma.resourceType.create({
+      data: {
+        name: `Malformed Type ${unique}`,
+        code: malformedCode,
+        resources: {
+          create: [
+            {
+              name: 'BadRes',
+              code: 'INVALIDCODE',
+              isActive: true,
+            },
+          ],
+        },
+      },
+    });
+
+    const res = await patchRequest({
+      id: malformedType.id,
+      body: {
+        name: `Fixed Type ${unique}`,
+        code: correctedCodePrefix,
+      },
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      id: malformedType.id,
+      name: `Fixed Type ${unique}`,
+      code: correctedCodePrefix,
+    });
+
+    const updatedResource = await prisma.resource.findFirst({
+      where: { typeId: malformedType.id },
+    });
+
+    expect(updatedResource).not.toBeNull();
+    expect(updatedResource?.code).toBe(`${correctedCodePrefix}-000001`);
+
+    await prisma.resource.deleteMany({ where: { typeId: malformedType.id } });
+    await prisma.resourceType.delete({ where: { id: malformedType.id } });
+  });
 });
