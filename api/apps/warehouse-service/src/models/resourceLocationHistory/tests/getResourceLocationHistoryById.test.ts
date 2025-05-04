@@ -2,14 +2,38 @@ import request from 'supertest';
 import prisma from '../../../prismaClient';
 import app from '../../../app';
 import { v4 as uuid } from 'uuid';
+import { createTestUser, mockAccessToken } from '@libs/tests/setup';
 
-const baseUrl = '/api/warehouse/resourceLocationHistories';
+const baseUrl = (id: string) => `/api/warehouse/resourceLocationHistories/${id}`;
+const testEmail = 'getuser@example.com';
+const testPassword = 'Test1234!';
 
 describe('GET /resourceLocationHistories/:id', () => {
   let historyId: string;
   let fromLocationId: string;
   let toLocationId: string;
   let resourceId: string;
+  let testUserId: string;
+  let accessToken: string;
+
+  const getRequest = (id: string) =>
+    request(app).get(baseUrl(id)).set('Authorization', `Bearer ${accessToken}`);
+
+  beforeAll(async () => {
+    const user = await createTestUser(prisma, {
+      email: testEmail,
+      password: testPassword,
+      firstName: 'Get',
+      lastName: 'User',
+    });
+
+    testUserId = user.id;
+    accessToken = mockAccessToken(testUserId);
+  });
+
+  afterAll(async () => {
+    await prisma.user.delete({ where: { id: testUserId } });
+  });
 
   beforeEach(async () => {
     fromLocationId = uuid();
@@ -45,7 +69,7 @@ describe('GET /resourceLocationHistories/:id', () => {
   });
 
   it('returns 200 and history record with relations', async () => {
-    const res = await request(app).get(`${baseUrl}/${historyId}`);
+    const res = await getRequest(historyId);
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('id', historyId);
@@ -54,7 +78,8 @@ describe('GET /resourceLocationHistories/:id', () => {
   });
 
   it('returns 404 if record not found', async () => {
-    const res = await request(app).get(`${baseUrl}/nonexistent-id`);
+    const res = await getRequest('non-existent-id');
+
     expect(res.status).toBe(404);
     expect(res.body.error).toBe('History record not found');
   });
@@ -64,7 +89,7 @@ describe('GET /resourceLocationHistories/:id', () => {
       .spyOn(prisma.resourceLocationHistory, 'findUnique')
       .mockRejectedValueOnce(new Error('Boom'));
 
-    const res = await request(app).get(`${baseUrl}/${historyId}`);
+    const res = await getRequest(historyId);
 
     expect(res.status).toBe(500);
     expect(res.body.error).toBe('Internal Server Error');
