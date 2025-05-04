@@ -1,6 +1,7 @@
 import { hashPassword } from '../helpers/bcrypt';
 import type { PrismaClient } from '@prisma/client';
 import type { Test } from 'supertest';
+import jwt from 'jsonwebtoken';
 
 export const createTestUser = async (
   prisma: PrismaClient,
@@ -42,15 +43,6 @@ export const cleanupUsers = async (prisma: PrismaClient, emails: string[]) => {
   });
 };
 
-export const loginTestUser = async ({
-  api,
-  email,
-  password,
-}: {
-  api: { post: (url: string) => Test };
-  email: string;
-  password?: string;
-}): Promise<string> => {
-  const res = await api.post('/api/user/auth/login').send({ email, password });
-  return res.body.accessToken;
+export const mockAccessToken = (userId: string): string => {
+  return jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET!, { expiresIn: '15m' });
 };

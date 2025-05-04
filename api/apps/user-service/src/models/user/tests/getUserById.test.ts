@@ -1,7 +1,7 @@
 import request from 'supertest';
 import prisma from '../../../prismaClient';
 import app from '../../../app';
-import { createTestUser, loginTestUser } from '@libs/tests/setup';
+import { createTestUser, mockAccessToken } from '@libs/tests/setup';
 
 const baseUrl = (id: string) => `/api/user/users/${id}`;
 const testEmail = 'getuser@example.com';
@@ -23,11 +23,7 @@ describe('GET /users/:id', () => {
     });
 
     testUserId = user.id;
-    accessToken = await loginTestUser({
-      api: request(app),
-      email: testEmail,
-      password: testPassword,
-    });
+    accessToken = mockAccessToken(testUserId);
   });
 
   afterAll(async () => {

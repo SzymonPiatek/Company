@@ -3,7 +3,7 @@ import app from '../../../app';
 import prisma from '../../../prismaClient';
 import { hashPassword } from '@libs/helpers/bcrypt';
 import type { User } from '@prisma/client';
-import { createTestUser, loginTestUser } from '@libs/tests/setup';
+import { createTestUser, mockAccessToken } from '@libs/tests/setup';
 
 const baseUrl = '/api/user/users';
 const testEmail = 'getuser@example.com';
@@ -37,18 +37,14 @@ describe('GET /users', () => {
     request(app).get(`${baseUrl}?${params}`).set('Authorization', `Bearer ${accessToken}`);
 
   beforeAll(async () => {
-    await createTestUser(prisma, {
+    const user = await createTestUser(prisma, {
       email: testEmail,
       password: testPassword,
       firstName: 'Get',
       lastName: 'User',
     });
 
-    accessToken = await loginTestUser({
-      api: request(app),
-      email: testEmail,
-      password: testPassword,
-    });
+    accessToken = mockAccessToken(user.id);
   });
 
   beforeAll(async () => {

@@ -2,7 +2,7 @@ import request from 'supertest';
 import prisma from '../../../prismaClient';
 import app from '../../../app';
 import { comparePassword } from '@libs/helpers/bcrypt';
-import { cleanupUsers, createTestUser, loginTestUser } from '@libs/tests/setup';
+import { cleanupUsers, createTestUser, mockAccessToken } from '@libs/tests/setup';
 import type { User } from '@prisma/client';
 
 const baseUrl = (id: string) => `/api/user/users/${id}`;
@@ -19,18 +19,12 @@ describe('PATCH /users/:id', () => {
     request(app).patch(baseUrl(id)).set('Authorization', `Bearer ${accessToken}`).send(body);
 
   beforeAll(async () => {
-    await createTestUser(prisma, {
+    const user = await createTestUser(prisma, {
       email: testEmail,
       password: testPassword,
-      firstName: 'Get',
-      lastName: 'User',
     });
 
-    accessToken = await loginTestUser({
-      api: request(app),
-      email: testEmail,
-      password: testPassword,
-    });
+    accessToken = mockAccessToken(user.id);
   });
 
   beforeAll(async () => {
