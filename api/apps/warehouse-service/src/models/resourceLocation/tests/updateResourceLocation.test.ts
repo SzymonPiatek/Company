@@ -2,12 +2,36 @@ import request from 'supertest';
 import prisma from '../../../prismaClient';
 import app from '../../../app';
 import { v4 as uuid } from 'uuid';
+import { createTestUser, mockAccessToken } from '@libs/tests/setup';
 
-const baseUrl = '/api/warehouse/resourceLocations';
+const baseUrl = (id: string) => `/api/warehouse/resourceLocations/${id}`;
+const testEmail = 'getuser@example.com';
+const testPassword = 'Test1234!';
 
 describe('PATCH /resourceLocations/:id', () => {
   let locationAId: string;
   let locationBId: string;
+  let testUserId: string;
+  let accessToken: string;
+
+  const patchRequest = ({ id, body }: { id: string; body: object }) =>
+    request(app).patch(baseUrl(id)).set('Authorization', `Bearer ${accessToken}`).send(body);
+
+  beforeAll(async () => {
+    const user = await createTestUser(prisma, {
+      email: testEmail,
+      password: testPassword,
+      firstName: 'Get',
+      lastName: 'User',
+    });
+
+    testUserId = user.id;
+    accessToken = mockAccessToken(testUserId);
+  });
+
+  afterAll(async () => {
+    await prisma.user.delete({ where: { id: testUserId } });
+  });
 
   beforeEach(async () => {
     locationAId = uuid();
@@ -39,21 +63,21 @@ describe('PATCH /resourceLocations/:id', () => {
   });
 
   it('should update the location name and return 200', async () => {
-    const res = await request(app).patch(`${baseUrl}/${locationAId}`).send({ name: 'Updated A' });
+    const res = await patchRequest({ id: locationAId, body: { name: 'Updated A' } });
 
     expect(res.status).toBe(200);
     expect(res.body.name).toBe('Updated A');
   });
 
   it('should return 409 if name is already taken', async () => {
-    const res = await request(app).patch(`${baseUrl}/${locationAId}`).send({ name: 'Main B' });
+    const res = await patchRequest({ id: locationAId, body: { name: 'Main B' } });
 
     expect(res.status).toBe(409);
     expect(res.body.error).toBe('Resource location with this name already exists.');
   });
 
   it('should return 404 if resource location not found', async () => {
-    const res = await request(app).patch(`${baseUrl}/non-existent-id`).send({ name: 'Whatever' });
+    const res = await patchRequest({ id: 'non-existent-id', body: { name: 'Whatever' } });
 
     expect(res.status).toBe(404);
     expect(res.body.error).toBe('Resource location not found');
@@ -64,9 +88,7 @@ describe('PATCH /resourceLocations/:id', () => {
       .spyOn(prisma.resourceLocation, 'update')
       .mockRejectedValueOnce(new Error('Simulated fail'));
 
-    const res = await request(app)
-      .patch(`${baseUrl}/${locationAId}`)
-      .send({ description: 'Whatever' });
+    const res = await patchRequest({ id: locationAId, body: { description: 'Whatever' } });
 
     expect(res.status).toBe(500);
     expect(res.body.error).toBe('Internal Server Error');
