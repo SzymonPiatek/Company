@@ -5,6 +5,7 @@ export default {
     '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
   },
   moduleNameMapper: {
+    '^@apps/(.*)$': '<rootDir>/apps/$1',
     '^@libs/(.*)$': '<rootDir>/libs/$1',
   },
   rootDir: './',

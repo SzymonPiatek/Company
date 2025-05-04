@@ -9,19 +9,19 @@ const getUserByIdHandler: RequestHandler = async (req, res): Promise<void> => {
   const { id } = req.params as UserParamsProps;
 
   try {
-    const results = await prisma.user.findUnique({
+    const result = await prisma.user.findUnique({
       where: { id },
       omit: {
         password: true,
       },
     });
 
-    if (!results) {
+    if (!result) {
       res.status(404).json({ error: 'User not found' });
       return;
     }
 
-    res.status(200).json(results);
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error', details: error });
   }

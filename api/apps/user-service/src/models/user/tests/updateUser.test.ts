@@ -88,7 +88,7 @@ describe('PATCH /users/:id', () => {
     });
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Failed to update user');
+    expect(res.body.error).toBe('Internal Server Error');
   });
 
   it('should return 500 on prisma failure', async () => {
@@ -97,7 +97,7 @@ describe('PATCH /users/:id', () => {
     const res = await patchRequest(updateUser.id, { firstName: 'Boom' });
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Failed to update user');
+    expect(res.body.error).toBe('Internal Server Error');
 
     spy.mockRestore();
   });

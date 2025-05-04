@@ -65,7 +65,7 @@ describe('POST /users', () => {
     });
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Failed to create user');
+    expect(res.body.error).toBe('Internal Server Error');
 
     spy.mockRestore();
   });
