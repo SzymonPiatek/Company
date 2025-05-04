@@ -1,5 +1,5 @@
 import type { PrismaClient, User } from '@prisma/client';
-import { cleanupUsers, createTestUser, loginTestUser } from './setup';
+import { cleanupUsers, createTestUser } from './setup';
 import { hashPassword } from '../helpers/bcrypt';
 
 jest.mock('../helpers/bcrypt', () => ({
@@ -8,7 +8,7 @@ jest.mock('../helpers/bcrypt', () => ({
 
 const mockPrisma = {
   user: {
-    create: jest.fn(),
+    upsert: jest.fn(),
     deleteMany: jest.fn(),
   },
 } as unknown as PrismaClient;
@@ -19,38 +19,59 @@ describe('setup helpers', () => {
   });
 
   describe('createTestUser', () => {
-    it('creates user with default values', async () => {
+    it('creates or updates user with default values', async () => {
       const user = { id: '123', email: 'testuser@example.com' } as User;
-      mockPrisma.user.create = jest.fn().mockResolvedValue(user);
+      mockPrisma.user.upsert = jest.fn().mockResolvedValue(user);
 
       const result = await createTestUser(mockPrisma);
 
       expect(hashPassword).toHaveBeenCalledWith('securePass123!');
-      expect(mockPrisma.user.create).toHaveBeenCalledWith({
-        data: {
+      expect(mockPrisma.user.upsert).toHaveBeenCalledWith({
+        where: { email: 'testuser@example.com' },
+        update: expect.objectContaining({
+          firstName: 'Test',
+          lastName: 'User',
+          isActive: true,
+          password: 'hashedPass',
+        }),
+        create: expect.objectContaining({
           email: 'testuser@example.com',
           firstName: 'Test',
           lastName: 'User',
-          password: 'hashedPass',
           isActive: true,
-        },
+          password: 'hashedPass',
+        }),
       });
       expect(result).toBe(user);
     });
 
-    it('creates user with overrides', async () => {
-      const user = { id: '123', email: 'custom@example.com' } as User;
-      mockPrisma.user.create = jest.fn().mockResolvedValue(user);
+    it('creates or updates user with overrides', async () => {
+      const user = { id: '456', email: 'custom@example.com' } as User;
+      mockPrisma.user.upsert = jest.fn().mockResolvedValue(user);
 
       const result = await createTestUser(mockPrisma, {
         email: 'custom@example.com',
         password: 'MyPass123!',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        isActive: false,
       });
 
       expect(hashPassword).toHaveBeenCalledWith('MyPass123!');
-      expect(mockPrisma.user.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
+      expect(mockPrisma.user.upsert).toHaveBeenCalledWith({
+        where: { email: 'custom@example.com' },
+        update: expect.objectContaining({
           email: 'custom@example.com',
+          firstName: 'Jane',
+          lastName: 'Doe',
+          isActive: false,
+          password: 'hashedPass',
+        }),
+        create: expect.objectContaining({
+          email: 'custom@example.com',
+          firstName: 'Jane',
+          lastName: 'Doe',
+          isActive: false,
           password: 'hashedPass',
         }),
       });
@@ -69,35 +90,6 @@ describe('setup helpers', () => {
           },
         },
       });
-    });
-  });
-
-  describe('loginTestUser', () => {
-    it('logs in user and returns access token', async () => {
-      const mockSend = jest.fn().mockResolvedValue({
-        body: {
-          accessToken: 'test-token',
-        },
-      });
-
-      const mockApi = {
-        post: jest.fn().mockReturnValue({
-          send: mockSend,
-        }),
-      };
-
-      const token = await loginTestUser({
-        api: mockApi,
-        email: 'user@example.com',
-        password: 'securePass123',
-      });
-
-      expect(mockApi.post).toHaveBeenCalledWith('/api/user/auth/login');
-      expect(mockSend).toHaveBeenCalledWith({
-        email: 'user@example.com',
-        password: 'securePass123',
-      });
-      expect(token).toBe('test-token');
     });
   });
 });

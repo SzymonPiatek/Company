@@ -3,12 +3,12 @@ import prisma from '../../../prismaClient';
 import app from '../../../app';
 import { createTestUser, mockAccessToken } from '@libs/tests/setup';
 
+const uniqueSuffix = Date.now();
 const baseUrl = (id: string) => `/api/resource/resources/${id}`;
-const testEmail = 'getuser@example.com';
+const testEmail = `getuser-${uniqueSuffix}@example.com`;
 const testPassword = 'Test1234!';
 
 describe('PATCH /api/resource/resources/:id', () => {
-  const uniqueSuffix = Date.now();
   const typeId = `type-${uniqueSuffix}`;
   const typeName = `Type ${uniqueSuffix}`;
   let resourceId: string;
@@ -53,7 +53,10 @@ describe('PATCH /api/resource/resources/:id', () => {
   });
 
   afterAll(async () => {
-    await prisma.user.delete({ where: { id: testUserId } });
+    if (testUserId) {
+      await prisma.user.delete({ where: { id: testUserId } });
+    }
+
     await prisma.resource.deleteMany({ where: { typeId } });
     await prisma.resourceType.delete({ where: { id: typeId } });
   });

@@ -1,6 +1,5 @@
 import { hashPassword } from '../helpers/bcrypt';
 import type { PrismaClient } from '@prisma/client';
-import type { Test } from 'supertest';
 import jwt from 'jsonwebtoken';
 
 export const createTestUser = async (
@@ -13,21 +12,27 @@ export const createTestUser = async (
     isActive: boolean;
   }> = {},
 ) => {
+  const email = overrides.email || 'testuser@example.com';
   const plainPassword = overrides.password || 'securePass123!';
   const hashedPassword = await hashPassword(plainPassword);
 
   const defaultData = {
-    email: 'testuser@example.com',
     firstName: 'Test',
     lastName: 'User',
-    password: hashedPassword,
     isActive: true,
   };
 
-  return prisma.user.create({
-    data: {
+  return prisma.user.upsert({
+    where: { email },
+    update: {
       ...defaultData,
       ...overrides,
+      password: hashedPassword,
+    },
+    create: {
+      ...defaultData,
+      ...overrides,
+      email,
       password: hashedPassword,
     },
   });

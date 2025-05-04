@@ -13,11 +13,11 @@ describe('GET /api/resource/resources', () => {
   let testUserId: string;
   let accessToken: string;
 
-  const getRequest = async ({ query }: { query?: object }) => {
+  const getRequest = async ({ query = {} }: { query?: object }) => {
     return await request(app)
       .get(baseUrl)
       .set('Authorization', `Bearer ${accessToken}`)
-      .query(query ?? {});
+      .query(query);
   };
 
   beforeAll(async () => {
