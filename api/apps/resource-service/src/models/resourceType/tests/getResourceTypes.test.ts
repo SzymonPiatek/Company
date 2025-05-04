@@ -1,15 +1,35 @@
 import request from 'supertest';
 import app from '../../../app';
 import prisma from '../../../prismaClient';
+import { createTestUser, mockAccessToken } from '@libs/tests/setup';
 
 const baseUrl = '/api/resource/resourceTypes';
+const testEmail = 'getuser@example.com';
+const testPassword = 'Test1234!';
 
 describe('GET /api/resource/resourceTypes', () => {
   const unique = Date.now();
   const typeName = `Resource Type ${unique}`;
   const typeCode = `TYPE-${unique}`;
+  let testUserId: string;
+  let accessToken: string;
+
+  const getRequest = async ({ query }: { query?: object }) => {
+    return await request(app)
+      .get(baseUrl)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .query(query ?? {});
+  };
 
   beforeAll(async () => {
+    const user = await createTestUser(prisma, {
+      email: testEmail,
+      password: testPassword,
+    });
+
+    testUserId = user.id;
+    accessToken = mockAccessToken(testUserId);
+
     await prisma.resourceType.create({
       data: {
         name: typeName,
@@ -25,6 +45,7 @@ describe('GET /api/resource/resourceTypes', () => {
   });
 
   afterAll(async () => {
+    await prisma.user.delete({ where: { id: testUserId } });
     await prisma.resource.deleteMany({
       where: { code: { contains: typeCode } },
     });
@@ -32,7 +53,7 @@ describe('GET /api/resource/resourceTypes', () => {
   });
 
   it('should return resource types with pagination', async () => {
-    const res = await request(app).get(baseUrl);
+    const res = await getRequest({});
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('data');
@@ -42,7 +63,7 @@ describe('GET /api/resource/resourceTypes', () => {
   });
 
   it('should filter resource types by name', async () => {
-    const res = await request(app).get(baseUrl).query({ name: typeName });
+    const res = await getRequest({ query: { name: typeName } });
 
     expect(res.status).toBe(200);
     expect(res.body.data).toHaveLength(1);
@@ -54,7 +75,7 @@ describe('GET /api/resource/resourceTypes', () => {
       .spyOn(prisma.resourceType, 'findMany')
       .mockRejectedValueOnce(new Error('DB FAIL'));
 
-    const res = await request(app).get(baseUrl);
+    const res = await getRequest({});
 
     expect(res.status).toBe(500);
     expect(res.body.error).toBe('Internal Server Error');

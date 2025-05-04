@@ -4,7 +4,6 @@
   "workspaces": [
     "apps/*"
   ],
-  "type": "module",
   "scripts": {
     "seed": "npx prisma db seed",
     "generate": "prisma generate --schema=./prisma",
@@ -32,6 +31,7 @@
     "bcryptjs": "^3.0.2",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
     "path": "^0.12.7",
     "uuid": "^11.1.0"
   },
@@ -40,6 +40,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.1",
     "@types/jest": "^29.5.14",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.14.1",
     "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.31.0",

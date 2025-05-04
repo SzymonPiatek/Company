@@ -1,4 +1,4 @@
-import buildQueryConditions from '../helpers/buildQueryConditions';
+import buildQueryConditions from '../buildQueryConditions';
 
 describe('buildQueryConditions', () => {
   it('returns empty object when no filters or search provided', () => {

@@ -24,28 +24,32 @@ const updateResourceTypeHandler: RequestHandler = async (req, res): Promise<void
       return;
     }
 
-    const nameTaken = await prisma.resourceType.findFirst({
-      where: {
-        name: data.name,
-        NOT: { id },
-      },
-    });
+    if (existingType.name !== data.name) {
+      const nameTaken = await prisma.resourceType.findFirst({
+        where: {
+          name: data.name,
+          NOT: { id },
+        },
+      });
 
-    if (nameTaken) {
-      res.status(409).json({ error: 'Resource name already exists' });
-      return;
+      if (nameTaken) {
+        res.status(409).json({ error: 'Resource name already exists' });
+        return;
+      }
     }
 
-    const codeTaken = await prisma.resourceType.findFirst({
-      where: {
-        code: data.code,
-        NOT: { id },
-      },
-    });
+    if (existingType.code !== data.code) {
+      const codeTaken = await prisma.resourceType.findFirst({
+        where: {
+          code: data.code,
+          NOT: { id },
+        },
+      });
 
-    if (codeTaken) {
-      res.status(409).json({ error: 'Resource code already exists' });
-      return;
+      if (codeTaken) {
+        res.status(409).json({ error: 'Resource code already exists' });
+        return;
+      }
     }
 
     const updatedType = await prisma.$transaction(async (tx) => {

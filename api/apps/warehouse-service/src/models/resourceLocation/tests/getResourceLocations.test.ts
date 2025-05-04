@@ -3,12 +3,36 @@ import prisma from '../../../prismaClient';
 import app from '../../../app';
 import { v4 as uuid } from 'uuid';
 import { ResourceLocation } from '@prisma/client';
+import { createTestUser, mockAccessToken } from '@libs/tests/setup';
 
 const baseUrl = '/api/warehouse/resourceLocations';
+const testEmail = 'getuser@example.com';
+const testPassword = 'Test1234!';
 
 describe('GET /resourceLocations', () => {
   const nameA = `Loc-A-${uuid()}`;
   const nameB = `Loc-B-${uuid()}`;
+  let testUserId: string;
+  let accessToken: string;
+
+  const getRequest = ({ params }: { params?: string }) =>
+    request(app).get(`${baseUrl}?${params}`).set('Authorization', `Bearer ${accessToken}`);
+
+  beforeAll(async () => {
+    const user = await createTestUser(prisma, {
+      email: testEmail,
+      password: testPassword,
+      firstName: 'Get',
+      lastName: 'User',
+    });
+
+    testUserId = user.id;
+    accessToken = mockAccessToken(testUserId);
+  });
+
+  afterAll(async () => {
+    await prisma.user.delete({ where: { id: testUserId } });
+  });
 
   beforeEach(async () => {
     await prisma.resourceLocation.createMany({
@@ -28,7 +52,7 @@ describe('GET /resourceLocations', () => {
   });
 
   it('returns list of resource locations', async () => {
-    const res = await request(app).get(baseUrl);
+    const res = await getRequest({});
 
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body.data)).toBe(true);
@@ -36,19 +60,22 @@ describe('GET /resourceLocations', () => {
   });
 
   it('filters by name', async () => {
-    const res = await request(app).get(`${baseUrl}?name=${nameA}`);
+    const res = await getRequest({ params: `name=${nameA}` });
+
     expect(res.status).toBe(200);
     expect(res.body.data[0].name).toBe(nameA);
   });
 
   it('filters by description', async () => {
-    const res = await request(app).get(`${baseUrl}?description=Second location`);
+    const res = await getRequest({ params: `description=Second location` });
+
     expect(res.status).toBe(200);
     expect(res.body.data[0].description).toBe('Second location');
   });
 
   it('supports full-text search', async () => {
-    const res = await request(app).get(`${baseUrl}?search=${nameB.split('-')[1]}`);
+    const res = await getRequest({ params: `search=${nameB.split('-')[1]}` });
+
     expect(res.status).toBe(200);
     expect(res.body.data.find((r: ResourceLocation) => r.name === nameB)).toBeTruthy();
   });
@@ -57,7 +84,9 @@ describe('GET /resourceLocations', () => {
     const spy = jest
       .spyOn(prisma.resourceLocation, 'findMany')
       .mockRejectedValueOnce(new Error('DB FAIL'));
-    const res = await request(app).get(baseUrl);
+
+    const res = await getRequest({});
+
     expect(res.status).toBe(500);
     expect(res.body.error).toBe('Internal Server Error');
     spy.mockRestore();

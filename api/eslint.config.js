@@ -1,6 +1,6 @@
-import tseslint from 'typescript-eslint';
+const tseslint = require('typescript-eslint');
 
-export default [
+module.exports = [
   ...tseslint.config({
     files: ['**/*.ts'],
     plugins: {

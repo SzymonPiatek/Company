@@ -1,15 +1,35 @@
 import request from 'supertest';
 import prisma from '../../../prismaClient';
 import app from '../../../app';
+import { createTestUser, mockAccessToken } from '@libs/tests/setup';
 
 const baseUrl = '/api/resource/resources';
+const testEmail = 'getuser@example.com';
+const testPassword = 'Test1234!';
 
 describe('POST /api/resource', () => {
   const uniqueSuffix = Date.now();
   const typeId = `type-${uniqueSuffix}`;
   const typeName = `Test Type ${uniqueSuffix}`;
+  let testUserId: string;
+  let accessToken: string;
+
+  const postRequest = async (body: object) => {
+    return await request(app)
+      .post(baseUrl)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send(body);
+  };
 
   beforeAll(async () => {
+    const user = await createTestUser(prisma, {
+      email: testEmail,
+      password: testPassword,
+    });
+
+    testUserId = user.id;
+    accessToken = mockAccessToken(testUserId);
+
     await prisma.resourceType.create({
       data: {
         id: typeId,
@@ -20,6 +40,7 @@ describe('POST /api/resource', () => {
   });
 
   afterAll(async () => {
+    await prisma.user.delete({ where: { id: testUserId } });
     await prisma.resource.deleteMany({ where: { typeId } });
 
     try {
@@ -30,7 +51,7 @@ describe('POST /api/resource', () => {
   });
 
   it('should create a new resource and return 201', async () => {
-    const res = await request(app).post(baseUrl).send({
+    const res = await postRequest({
       name: 'New Resource',
       description: 'Test description',
       isActive: true,
@@ -48,7 +69,7 @@ describe('POST /api/resource', () => {
   });
 
   it('should return 404 when resourceType not found', async () => {
-    const res = await request(app).post(baseUrl).send({
+    const res = await postRequest({
       name: 'Invalid Resource',
       typeId: 'nonexistent-type-id',
     });
@@ -62,7 +83,7 @@ describe('POST /api/resource', () => {
       .spyOn(prisma.resourceType, 'findUnique')
       .mockRejectedValueOnce(new Error('DB error'));
 
-    const res = await request(app).post(baseUrl).send({
+    const res = await postRequest({
       name: 'Should Fail',
       typeId,
     });

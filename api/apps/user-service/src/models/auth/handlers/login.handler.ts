@@ -1,6 +1,7 @@
 import type { RequestHandler } from 'express';
 import prisma from '../../../prismaClient';
 import { comparePassword } from '@libs/helpers/bcrypt';
+import { generateAccessToken, generateRefreshToken } from '@libs/helpers/jwt';
 
 type LoginBodyProps = {
   email: string;
@@ -30,9 +31,22 @@ const loginHandler: RequestHandler = async (req, res) => {
       return;
     }
 
-    res.status(200).json({
-      user: { ...user, password: undefined },
-    });
+    const accessToken = generateAccessToken({ userId: user.id });
+    const refreshToken = generateRefreshToken({ userId: user.id });
+
+    res
+      .cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/api/auth/refresh',
+        maxAge: 1000 * 60 * 60 * 24,
+      })
+      .status(200)
+      .json({
+        user: { ...user, password: undefined },
+        accessToken,
+      });
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error', details: error });
   }

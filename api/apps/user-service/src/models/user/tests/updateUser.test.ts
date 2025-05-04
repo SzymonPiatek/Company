@@ -1,62 +1,60 @@
 import request from 'supertest';
 import prisma from '../../../prismaClient';
 import app from '../../../app';
-import { comparePassword, hashPassword } from '@libs/helpers/bcrypt';
-import { User } from '@prisma/client';
+import { comparePassword } from '@libs/helpers/bcrypt';
+import { cleanupUsers, createTestUser, mockAccessToken } from '@libs/tests/setup';
+import type { User } from '@prisma/client';
 
 const baseUrl = (id: string) => `/api/user/users/${id}`;
+const testEmail = 'getuser@example.com';
+const testPassword = 'securePass123';
+const updateUserEmail = 'update@example.com';
+const existingUserEmail = 'existing@example.com';
 
 describe('PATCH /users/:id', () => {
-  beforeAll(() => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
+  let accessToken: string;
+  let updateUser: User;
 
-  afterAll(() => {
-    (console.error as jest.Mock).mockRestore();
-  });
-  let testUser: User;
+  const patchRequest = (id: string, body: object) =>
+    request(app).patch(baseUrl(id)).set('Authorization', `Bearer ${accessToken}`).send(body);
 
   beforeAll(async () => {
+    const user = await createTestUser(prisma, {
+      email: testEmail,
+      password: testPassword,
+    });
+
+    accessToken = mockAccessToken(user.id);
+  });
+
+  beforeAll(async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+
     await prisma.user.deleteMany({
       where: {
-        email: { in: ['update@example.com', 'existing@example.com'] },
+        email: { in: [updateUserEmail, existingUserEmail] },
       },
     });
 
-    testUser = await prisma.user.create({
-      data: {
-        email: 'update@example.com',
-        firstName: 'Update',
-        lastName: 'User',
-        password: await hashPassword('Initial123!'),
-        isActive: true,
-      },
+    updateUser = await createTestUser(prisma, {
+      email: updateUserEmail,
+      password: 'Initial123!',
+      firstName: 'Update',
     });
 
-    await prisma.user.create({
-      data: {
-        email: 'existing@example.com',
-        firstName: 'Existing',
-        lastName: 'User',
-        password: 'irrelevant',
-        isActive: true,
-      },
+    await createTestUser(prisma, {
+      email: existingUserEmail,
     });
   });
 
   afterAll(async () => {
-    await prisma.user.deleteMany({
-      where: {
-        email: { in: ['update@example.com', 'existing@example.com'] },
-      },
-    });
+    jest.restoreAllMocks();
+
+    await cleanupUsers(prisma, [testEmail, updateUserEmail, existingUserEmail]);
   });
 
   it('should update user info without changing password', async () => {
-    const res = await request(app).patch(baseUrl(testUser.id)).send({
-      firstName: 'Updated',
-      lastName: 'User',
-    });
+    const res = await patchRequest(updateUser.id, { firstName: 'Updated', lastName: 'User' });
 
     expect(res.status).toBe(200);
     expect(res.body.firstName).toBe('Updated');
@@ -64,22 +62,20 @@ describe('PATCH /users/:id', () => {
   });
 
   it('should update and hash new password', async () => {
-    const res = await request(app).patch(baseUrl(testUser.id)).send({
+    const res = await patchRequest(updateUser.id, {
       password: 'NewSecret123!',
     });
 
     expect(res.status).toBe(200);
 
-    const updated = await prisma.user.findUnique({
-      where: { id: testUser.id },
-    });
+    const updated = await prisma.user.findUnique({ where: { id: updateUser.id } });
     const passwordMatch = await comparePassword('NewSecret123!', updated!.password);
     expect(passwordMatch).toBe(true);
   });
 
   it('should return 409 if email already exists on another user', async () => {
-    const res = await request(app).patch(baseUrl(testUser.id)).send({
-      email: 'existing@example.com',
+    const res = await patchRequest(updateUser.id, {
+      email: existingUserEmail,
     });
 
     expect(res.status).toBe(409);
@@ -87,8 +83,7 @@ describe('PATCH /users/:id', () => {
   });
 
   it('should return 500 if user does not exist', async () => {
-    const fakeId = '00000000-0000-0000-0000-000000000000';
-    const res = await request(app).patch(baseUrl(fakeId)).send({
+    const res = await patchRequest('00000000-0000-0000-0000-000000000000', {
       firstName: 'Ghost',
     });
 
@@ -99,9 +94,7 @@ describe('PATCH /users/:id', () => {
   it('should return 500 on prisma failure', async () => {
     const spy = jest.spyOn(prisma.user, 'update').mockRejectedValueOnce(new Error('Mock DB fail'));
 
-    const res = await request(app).patch(baseUrl(testUser.id)).send({
-      firstName: 'Boom',
-    });
+    const res = await patchRequest(updateUser.id, { firstName: 'Boom' });
 
     expect(res.status).toBe(500);
     expect(res.body.error).toBe('Failed to update user');

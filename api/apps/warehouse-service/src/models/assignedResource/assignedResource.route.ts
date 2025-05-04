@@ -3,14 +3,15 @@ import createAssignedResourceHandler from '../../models/assignedResource/handler
 import getAssignedResourcesHandler from '../../models/assignedResource/handlers/getAssignedResources.handler';
 import getAssignedResourceByIdHandler from '../../models/assignedResource/handlers/getAssignedResourceById.handler';
 import updateAssignedResourceHandler from '../../models/assignedResource/handlers/updateAssignedResource.handler';
+import authMiddleware from '@libs/helpers/middlewares/auth.middleware';
 
 const router = Router();
 
-router.get('/', getAssignedResourcesHandler);
-router.get('/:id', getAssignedResourceByIdHandler);
+router.get('/', authMiddleware, getAssignedResourcesHandler);
+router.get('/:id', authMiddleware, getAssignedResourceByIdHandler);
 
-router.post('/', createAssignedResourceHandler);
+router.post('/', authMiddleware, createAssignedResourceHandler);
 
-router.patch('/:id', updateAssignedResourceHandler);
+router.patch('/:id', authMiddleware, updateAssignedResourceHandler);
 
 export default router;

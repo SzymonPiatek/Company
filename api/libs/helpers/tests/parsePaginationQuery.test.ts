@@ -1,4 +1,4 @@
-import parsePaginationQuery from '../helpers/parsePaginationQuery';
+import parsePaginationQuery from '../parsePaginationQuery';
 import type { Request } from 'express';
 
 describe('parsePaginationQuery', () => {
