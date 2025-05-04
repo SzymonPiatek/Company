@@ -141,7 +141,7 @@ describe('authMiddleware', () => {
         httpOnly: true,
         secure: false,
         sameSite: 'strict',
-        path: '/api/auth/refresh',
+        path: '/',
       }),
     );
 

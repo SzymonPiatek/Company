@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { verify, TokenExpiredError } from 'jsonwebtoken';
 import { generateAccessToken, generateRefreshToken } from '@libs/helpers/jwt';
 
@@ -46,8 +46,8 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction): void =
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        path: '/api/auth/refresh',
-        maxAge: 1000 * 60 * 60 * 24 * 7,
+        path: '/',
+        maxAge: 1000 * 60 * 60 * 24,
       });
 
       res.setHeader('Authorization', `Bearer ${newAccessToken}`);
