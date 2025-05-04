@@ -21,37 +21,44 @@ const createResources = async ({
       return {
         ...type,
         typeId: resourceType?.id ?? null,
+        baseCode: resourceType?.code ?? null,
       };
     }),
   );
 
-  const filteredResourceTypes = extendedResourceTypes.filter(
-    (t): t is { name: string; code: string; typeId: string } =>
-      typeof t.typeId === 'string' && t.typeId.length > 0,
+  const filteredTypes = extendedResourceTypes.filter(
+    (t): t is { name: string; code: string; baseCode: string; typeId: string } =>
+      typeof t.typeId === 'string' && typeof t.baseCode === 'string',
   );
 
   const allResources: Resource[] = [];
 
-  for (const type of filteredResourceTypes) {
+  for (const type of filteredTypes) {
+    const existingCount = await prisma.resource.count({
+      where: { typeId: type.typeId },
+    });
+
     const resources = await Promise.all(
-      Array.from({ length: lengthPerType }, (_, i) =>
-        prisma.resource.upsert({
-          where: { code: `${type.code}-${i + 1}` },
+      Array.from({ length: lengthPerType }, async (_, i) => {
+        const paddedCount = String(existingCount + i + 1).padStart(6, '0');
+        const code = `${type.baseCode}-${paddedCount}`;
+
+        return prisma.resource.upsert({
+          where: { code },
           update: {},
           create: {
             name: `${type.name} ${i + 1}`,
-            code: `${type.code}-${i + 1}`,
+            code,
             typeId: type.typeId,
           },
-        }),
-      ),
+        });
+      }),
     );
 
     allResources.push(...resources);
   }
 
   console.log(`Created (${allResources.length}) resources`);
-
   return allResources;
 };
 
