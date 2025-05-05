@@ -1,120 +1,93 @@
 import request from 'supertest';
-import prisma from '../../../prismaClient';
 import app from '../../../app';
-import { createTestUser, mockAccessToken } from '@libs/tests/setup';
+import prisma from '../../../prismaClient';
 
-const uniqueSuffix = Date.now();
-const baseUrl = (id: string) => `/api/resource/resources/${id}`;
-const testEmail = `getuser-${uniqueSuffix}@example.com`;
-const testPassword = 'Test1234!';
+jest.mock('../../../prismaClient', () => ({
+  resource: {
+    findUnique: jest.fn(),
+    update: jest.fn(),
+  },
+  resourceType: {
+    findUnique: jest.fn(),
+  },
+}));
 
-describe('PATCH /api/resource/resources/:id', () => {
-  const typeId = `type-${uniqueSuffix}`;
-  const typeName = `Type ${uniqueSuffix}`;
-  let resourceId: string;
-  let testUserId: string;
-  let accessToken: string;
+const baseUrl = '/api/resource/resources';
 
-  const patchRequest = async ({ id, body }: { id: string; body: object }) => {
-    return await request(app)
-      .patch(baseUrl(id))
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(body);
-  };
+describe('PATCH /api/resource/resources/:id (mocked)', () => {
+  const resourceId = 'res-123';
+  const resourceTypeId = 'type-abc';
+  const endpoint = `${baseUrl}/${resourceId}`;
 
-  beforeAll(async () => {
-    const user = await createTestUser(prisma, {
-      email: testEmail,
-      password: testPassword,
-    });
-
-    testUserId = user.id;
-    accessToken = mockAccessToken(testUserId);
-
-    await prisma.resourceType.create({
-      data: {
-        id: typeId,
-        code: 'UPD',
-        name: typeName,
-      },
-    });
-
-    const resource = await prisma.resource.create({
-      data: {
-        name: 'Initial Resource',
-        code: 'UPD-000001',
-        description: 'Initial description',
-        isActive: false,
-        typeId,
-      },
-    });
-
-    resourceId = resource.id;
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  afterAll(async () => {
-    if (testUserId) {
-      await prisma.user.delete({ where: { id: testUserId } });
-    }
-
-    await prisma.resource.deleteMany({ where: { typeId } });
-    await prisma.resourceType.delete({ where: { id: typeId } });
-  });
-
-  it('should update an existing resource and return 200', async () => {
-    const res = await patchRequest({
+  it('should update a resource and return 200', async () => {
+    const mockResource = {
       id: resourceId,
-      body: {
-        name: 'Updated Resource',
-        description: 'Updated description',
-        isActive: true,
-        typeId,
-      },
+      name: 'Old Name',
+      description: 'Old Description',
+      isActive: true,
+      typeId: resourceTypeId,
+    };
+
+    const updateData = {
+      name: 'New Name',
+      description: 'Updated description',
+      isActive: false,
+      typeId: resourceTypeId,
+    };
+
+    const updatedResource = {
+      ...mockResource,
+      ...updateData,
+      updatedAt: new Date(),
+    };
+
+    (prisma.resource.findUnique as jest.Mock).mockResolvedValue(mockResource);
+    (prisma.resourceType.findUnique as jest.Mock).mockResolvedValue({ id: resourceTypeId });
+    (prisma.resource.update as jest.Mock).mockResolvedValue(updatedResource);
+
+    const res = await request(app).patch(endpoint).send(updateData);
+
+    expect(prisma.resource.findUnique).toHaveBeenCalledWith({ where: { id: resourceId } });
+    expect(prisma.resourceType.findUnique).toHaveBeenCalledWith({ where: { id: resourceTypeId } });
+    expect(prisma.resource.update).toHaveBeenCalledWith({
+      where: { id: resourceId },
+      data: updateData,
     });
 
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({
-      id: resourceId,
-      name: 'Updated Resource',
-      description: 'Updated description',
-      isActive: true,
-      typeId,
-    });
+    expect(res.body).toMatchObject(updateData);
   });
 
   it('should return 404 if resource not found', async () => {
-    const res = await patchRequest({
-      id: 'nonexistent-id',
-      body: { name: 'Whatever', typeId },
-    });
+    (prisma.resource.findUnique as jest.Mock).mockResolvedValue(null);
+
+    const res = await request(app).patch(endpoint).send({ name: 'Test' });
 
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: 'Resource not found' });
   });
 
-  it('should return 404 if resource type is not found', async () => {
-    const res = await patchRequest({
-      id: resourceId,
-      body: { name: 'With wrong typeId', typeId: 'non-existent-type' },
-    });
+  it('should return 404 if resource type not found', async () => {
+    (prisma.resource.findUnique as jest.Mock).mockResolvedValue({ id: resourceId });
+    (prisma.resourceType.findUnique as jest.Mock).mockResolvedValue(null);
+
+    const res = await request(app).patch(endpoint).send({ typeId: resourceTypeId });
 
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: 'Resource type not found' });
   });
 
   it('should return 500 on internal error', async () => {
-    const spy = jest
-      .spyOn(prisma.resource, 'findUnique')
-      .mockRejectedValueOnce(new Error('DB crash'));
+    (prisma.resource.findUnique as jest.Mock).mockRejectedValue(new Error('DB Error'));
 
-    const res = await patchRequest({
-      id: resourceId,
-      body: { name: 'Break it' },
-    });
+    const res = await request(app).patch(endpoint).send({ name: 'Something' });
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Internal Server Error');
-
-    spy.mockRestore();
+    expect(res.body).toHaveProperty('error', 'Internal Server Error');
+    expect(res.body).toHaveProperty('details');
   });
 });
