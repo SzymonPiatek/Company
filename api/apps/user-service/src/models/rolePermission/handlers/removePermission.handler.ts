@@ -23,7 +23,7 @@ const removePermissionHandler: RequestHandler = async (req, res) => {
       where: { roleId_permissionId: { roleId: data.roleId, permissionId: data.permissionId } },
     });
 
-    res.status(204).send('Role permission deleted');
+    res.status(204).json('Role permission deleted');
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error', details: error });
   }

@@ -1,4 +1,4 @@
-import { comparePassword, hashPassword } from '../helpers/bcrypt';
+import { hashPassword } from '../helpers/bcrypt';
 import type { PrismaClient } from '@prisma/client';
 import { sign } from 'jsonwebtoken';
 
