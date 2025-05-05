@@ -14,9 +14,18 @@ const createPermissionHandler: RequestHandler = async (req, res) => {
     return;
   }
 
-  const permission = await prisma.permission.create({ data });
+  try {
+    if (!data.name) {
+      res.status(400).json('Name is required');
+      return;
+    }
 
-  res.status(201).json(permission);
+    const permission = await prisma.permission.create({ data });
+
+    res.status(201).json(permission);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error', details: error });
+  }
 };
 
 export default createPermissionHandler;
