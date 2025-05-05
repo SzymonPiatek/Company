@@ -62,6 +62,7 @@ jest.mock(
   () => (_req: any, _res: any, next: any) => next(),
 );
 
+jest.mock('axios');
 jest.mock('../helpers/parsePaginationQuery', () => jest.fn());
 jest.mock('../helpers/buildOrderBy', () => jest.fn());
 jest.mock('../helpers/buildQueryConditions', () => jest.fn());

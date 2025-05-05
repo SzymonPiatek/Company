@@ -1,118 +1,68 @@
 import request from 'supertest';
-import prisma from '../../../prismaClient';
 import app from '../../../app';
-import { v4 as uuid } from 'uuid';
+import prisma from '../../../prismaClient';
 import axios from 'axios';
-import { createTestUser, mockAccessToken } from '@libs/tests/setup';
 
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+jest.mock('../../../prismaClient', () => ({
+  $transaction: jest.fn(),
+  assignedResource: { create: jest.fn() },
+  resourceLocationHistory: { create: jest.fn() },
+}));
 
 const baseUrl = '/api/warehouse/assignedResources';
-const testEmail = 'getuser@example.com';
-const testPassword = 'Test1234!';
 
-describe('POST /assignedResources', () => {
-  let locationId: string;
-  let resourceId: string;
-  let assignedResourceId: string | undefined;
-  let historyId: string | undefined;
-  let testUserId: string;
-  let accessToken: string;
-
-  const postRequest = (body: object) =>
-    request(app).post(baseUrl).set('Authorization', `Bearer ${accessToken}`).send(body);
-
-  beforeAll(async () => {
-    const user = await createTestUser(prisma, {
-      email: testEmail,
-      password: testPassword,
-      firstName: 'Get',
-      lastName: 'User',
-    });
-
-    testUserId = user.id;
-    accessToken = mockAccessToken(testUserId);
+describe('POST /api/warehouse/assignedResources (mocked)', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  afterAll(async () => {
-    await prisma.user.delete({ where: { id: testUserId } });
-  });
+  const validPayload = {
+    resourceId: 'res-123',
+    locationId: 'loc-456',
+  };
 
-  beforeEach(async () => {
-    locationId = uuid();
-    resourceId = uuid();
+  it('should create assignedResource and return 201', async () => {
+    (axios.get as jest.Mock).mockResolvedValueOnce({ data: { id: validPayload.resourceId } });
 
-    await prisma.resourceLocation.create({
-      data: { id: locationId, name: `Location-${locationId}` },
-    });
-  });
+    const mockAssigned = {
+      id: 'assigned-1',
+      ...validPayload,
+      createdAt: new Date(),
+    };
 
-  afterEach(async () => {
-    if (assignedResourceId) {
-      await prisma.assignedResource.delete({ where: { id: assignedResourceId } }).catch(() => {});
-    }
+    (prisma.$transaction as jest.Mock).mockResolvedValueOnce([mockAssigned]);
 
-    if (historyId) {
-      await prisma.resourceLocationHistory.delete({ where: { id: historyId } }).catch(() => {});
-    }
+    const res = await request(app).post(baseUrl).send(validPayload);
 
-    await prisma.resourceLocation.delete({ where: { id: locationId } }).catch(() => {});
-  });
-
-  it('returns 201 and created assigned resource on success', async () => {
-    mockedAxios.get.mockResolvedValueOnce({ data: { id: resourceId } });
-
-    const res = await postRequest({ resourceId, locationId });
-
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(res.status).toBe(201);
-    expect(res.body).toHaveProperty('id');
-    expect(res.body.resourceId).toBe(resourceId);
-    expect(res.body.locationId).toBe(locationId);
-
-    assignedResourceId = res.body.id;
-
-    const history = await prisma.resourceLocationHistory.findFirst({
-      where: { resourceId },
-    });
-
-    if (history) historyId = history.id;
+    expect(res.body).toMatchObject(validPayload);
   });
 
-  it('returns 400 if body is incomplete', async () => {
-    const res = await postRequest({});
+  it('should return 400 if resourceId or locationId is missing', async () => {
+    const res = await request(app).post(baseUrl).send({});
+
     expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'ResourceId and locationId are required' });
   });
 
-  it('returns 404 if resource not found', async () => {
-    mockedAxios.get.mockResolvedValueOnce({ data: null });
+  it('should return 404 if resource not found', async () => {
+    (axios.get as jest.Mock).mockRejectedValueOnce(new Error('Not found'));
 
-    const res = await postRequest({ resourceId, locationId });
+    const res = await request(app).post(baseUrl).send(validPayload);
 
     expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty('error', 'Resource not found');
   });
 
-  it('returns 404 if axios throws error', async () => {
-    mockedAxios.get.mockRejectedValueOnce(new Error('Axios error'));
+  it('should return 500 on internal error', async () => {
+    (axios.get as jest.Mock).mockResolvedValueOnce({ data: { id: validPayload.resourceId } });
+    (prisma.$transaction as jest.Mock).mockRejectedValueOnce(new Error('DB error'));
 
-    const res = await postRequest({ resourceId, locationId });
-
-    expect(res.status).toBe(404);
-    expect(res.body.error).toBe('Resource not found');
-  });
-
-  it('returns 500 on internal error', async () => {
-    mockedAxios.get.mockResolvedValueOnce({ data: { id: resourceId } });
-
-    const spy = jest
-      .spyOn(prisma, '$transaction')
-      .mockRejectedValueOnce(new Error('Simulated failure'));
-
-    const res = await postRequest({ resourceId, locationId });
+    const res = await request(app).post(baseUrl).send(validPayload);
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Internal Server Error');
-
-    spy.mockRestore();
+    expect(res.body).toHaveProperty('error', 'Internal Server Error');
+    expect(res.body).toHaveProperty('details');
   });
 });

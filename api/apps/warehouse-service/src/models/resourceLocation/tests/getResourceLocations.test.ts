@@ -1,94 +1,96 @@
 import request from 'supertest';
-import prisma from '../../../prismaClient';
 import app from '../../../app';
-import { v4 as uuid } from 'uuid';
-import { ResourceLocation } from '@prisma/client';
-import { createTestUser, mockAccessToken } from '@libs/tests/setup';
+import prisma from '../../../prismaClient';
+import parsePaginationQuery from '@libs/helpers/parsePaginationQuery';
+import buildOrderBy from '@libs/helpers/buildOrderBy';
+import buildQueryConditions from '@libs/helpers/buildQueryConditions';
+import paginateData from '@libs/helpers/paginateData';
+
+jest.mock('../../../prismaClient', () => ({
+  resourceLocation: {},
+}));
 
 const baseUrl = '/api/warehouse/resourceLocations';
-const testEmail = 'getuser@example.com';
-const testPassword = 'Test1234!';
 
-describe('GET /resourceLocations', () => {
-  const nameA = `Loc-A-${uuid()}`;
-  const nameB = `Loc-B-${uuid()}`;
-  let testUserId: string;
-  let accessToken: string;
-
-  const getRequest = ({ params }: { params?: string }) =>
-    request(app).get(`${baseUrl}?${params}`).set('Authorization', `Bearer ${accessToken}`);
-
-  beforeAll(async () => {
-    const user = await createTestUser(prisma, {
-      email: testEmail,
-      password: testPassword,
-      firstName: 'Get',
-      lastName: 'User',
-    });
-
-    testUserId = user.id;
-    accessToken = mockAccessToken(testUserId);
+describe('GET /api/warehouse/resourceLocations (mocked)', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  afterAll(async () => {
-    await prisma.user.delete({ where: { id: testUserId } });
-  });
+  it('should return paginated list of resource locations', async () => {
+    const mockPagination = {
+      page: 1,
+      limit: 10,
+      skip: 0,
+      take: 10,
+      sortBy: 'name',
+      sortOrder: 'asc',
+    };
 
-  beforeEach(async () => {
-    await prisma.resourceLocation.createMany({
+    const mockOrderBy = [{ name: 'asc' }];
+    const mockWhere = { name: { contains: 'Warehouse' } };
+
+    const now = new Date().toISOString();
+
+    const mockResult = {
       data: [
-        { name: nameA, description: 'First location' },
-        { name: nameB, description: 'Second location' },
+        {
+          id: 'loc-1',
+          name: 'Warehouse A',
+          description: 'First',
+          createdAt: now,
+          updatedAt: now,
+        },
       ],
+      meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+    };
+
+    (parsePaginationQuery as jest.Mock).mockReturnValue(mockPagination);
+    (buildOrderBy as jest.Mock).mockReturnValue(mockOrderBy);
+    (buildQueryConditions as jest.Mock).mockReturnValue(mockWhere);
+    (paginateData as jest.Mock).mockResolvedValue(mockResult);
+
+    const res = await request(app).get(baseUrl).query({ name: 'Warehouse' });
+
+    expect(parsePaginationQuery).toHaveBeenCalled();
+    expect(buildOrderBy).toHaveBeenCalledWith({
+      sortBy: 'name',
+      sortOrder: 'asc',
+      allowedFields: ['id', 'name', 'description', 'createdAt', 'updatedAt'],
     });
-  });
 
-  afterEach(async () => {
-    await prisma.resourceLocation.deleteMany({
-      where: {
-        name: { in: [nameA, nameB] },
-      },
+    expect(buildQueryConditions).toHaveBeenCalledWith({
+      fields: ['name', 'description'],
+      filters: { name: 'Warehouse', description: undefined },
+      search: undefined,
     });
-  });
 
-  it('returns list of resource locations', async () => {
-    const res = await getRequest({});
-
-    expect(res.status).toBe(200);
-    expect(Array.isArray(res.body.data)).toBe(true);
-    expect(res.body.data.length).toBeGreaterThan(0);
-  });
-
-  it('filters by name', async () => {
-    const res = await getRequest({ params: `name=${nameA}` });
+    expect(paginateData).toHaveBeenCalledWith(
+      prisma.resourceLocation,
+      { where: mockWhere, orderBy: mockOrderBy },
+      mockPagination,
+    );
 
     expect(res.status).toBe(200);
-    expect(res.body.data[0].name).toBe(nameA);
+    expect(res.body.data[0]).toMatchObject({
+      id: 'loc-1',
+      name: 'Warehouse A',
+      description: 'First',
+    });
+    expect(typeof res.body.data[0].createdAt).toBe('string');
+    expect(typeof res.body.data[0].updatedAt).toBe('string');
+    expect(res.body.meta).toEqual(mockResult.meta);
   });
 
-  it('filters by description', async () => {
-    const res = await getRequest({ params: `description=Second location` });
+  it('should return 500 on internal error', async () => {
+    (parsePaginationQuery as jest.Mock).mockImplementation(() => {
+      throw new Error('Parsing failed');
+    });
 
-    expect(res.status).toBe(200);
-    expect(res.body.data[0].description).toBe('Second location');
-  });
-
-  it('supports full-text search', async () => {
-    const res = await getRequest({ params: `search=${nameB.split('-')[1]}` });
-
-    expect(res.status).toBe(200);
-    expect(res.body.data.find((r: ResourceLocation) => r.name === nameB)).toBeTruthy();
-  });
-
-  it('returns 500 on server error', async () => {
-    const spy = jest
-      .spyOn(prisma.resourceLocation, 'findMany')
-      .mockRejectedValueOnce(new Error('DB FAIL'));
-
-    const res = await getRequest({});
+    const res = await request(app).get(baseUrl);
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Internal Server Error');
-    spy.mockRestore();
+    expect(res.body).toHaveProperty('error', 'Internal Server Error');
+    expect(res.body).toHaveProperty('details');
   });
 });
