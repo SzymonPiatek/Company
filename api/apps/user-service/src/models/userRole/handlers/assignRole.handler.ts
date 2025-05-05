@@ -10,7 +10,7 @@ const assignRoleHandler: RequestHandler = async (req, res) => {
   const data = req.params as UserRoleParamsProps;
 
   if (!data.userId || !data.roleId) {
-    res.status(400).json({ error: 'UserId and roleId is required' });
+    res.status(400).json({ error: 'UserId and roleId are required' });
     return;
   }
 

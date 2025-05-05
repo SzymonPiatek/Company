@@ -11,9 +11,7 @@ const removeRoleHandler: RequestHandler = async (req, res) => {
 
   try {
     const exists = await prisma.userRole.findUnique({
-      where: {
-        userId_roleId: { userId: data.userId, roleId: data.roleId },
-      },
+      where: { userId_roleId: { userId: data.userId, roleId: data.roleId } },
     });
 
     if (!exists) {
@@ -25,8 +23,7 @@ const removeRoleHandler: RequestHandler = async (req, res) => {
       where: { userId_roleId: { userId: data.userId, roleId: data.roleId } },
     });
 
-    res.status(204).send();
-    return;
+    res.status(204).send('User role');
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error', details: error });
   }
