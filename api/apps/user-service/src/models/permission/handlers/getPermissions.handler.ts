@@ -1,28 +1,28 @@
 import type { RequestHandler } from 'express';
-import prisma from '@apps/user-service/src/prismaClient';
 import parsePaginationQuery from '@libs/helpers/parsePaginationQuery';
 import buildOrderBy from '@libs/helpers/buildOrderBy';
-import type { Role } from '@prisma/client';
+import type { Permission } from '@prisma/client';
 import buildQueryConditions from '@libs/helpers/buildQueryConditions';
 import paginateData from '@libs/helpers/paginateData';
+import prisma from '@apps/user-service/src/prismaClient';
 
-type RolesQueryProps = {
+type PermissionsQueryProps = {
   name?: string;
   description?: string;
   search?: string;
 };
 
-const getRolesHandler: RequestHandler = async (req, res) => {
+const getPermissionsHandler: RequestHandler = async (req, res) => {
   try {
     const pagination = parsePaginationQuery(req);
 
-    const orderBy = buildOrderBy<Role>({
+    const orderBy = buildOrderBy<Permission>({
       sortBy: pagination.sortBy,
       sortOrder: pagination.sortOrder,
       allowedFields: ['id', 'name', 'description', 'createdAt', 'updatedAt'],
     });
 
-    const { name, description, search } = req.query as RolesQueryProps;
+    const { name, description, search } = req.query as PermissionsQueryProps;
 
     const where = buildQueryConditions({
       fields: ['name', 'description'],
@@ -31,7 +31,7 @@ const getRolesHandler: RequestHandler = async (req, res) => {
     });
 
     const result = await paginateData(
-      prisma.role,
+      prisma.permission,
       {
         where,
         orderBy,
@@ -45,4 +45,4 @@ const getRolesHandler: RequestHandler = async (req, res) => {
   }
 };
 
-export default getRolesHandler;
+export default getPermissionsHandler;
