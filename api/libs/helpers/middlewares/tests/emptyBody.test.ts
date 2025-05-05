@@ -36,7 +36,7 @@ describe('emptyBodyMiddleware', () => {
   });
 
   it('should return 400 if req.body is not an object', () => {
-    req.body = 'string' as any;
+    req.body = 'string' as string;
 
     emptyBodyMiddleware(req as Request, res as Response, next);
 
