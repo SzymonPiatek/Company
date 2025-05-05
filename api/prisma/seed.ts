@@ -13,12 +13,19 @@ async function main() {
   await cleaningData({
     prisma,
     models: [
-      'resourceLocationHistory',
-      'assignedResource',
+      // user-service
+      'rolePermission',
+      'userRole',
+      'permission',
+      'role',
+      'user',
+      // resource-service
       'resource',
       'resourceType',
+      // warehouse-service
+      'resourceLocationHistory',
+      'assignedResource',
       'resourceLocation',
-      'user',
     ],
   });
 

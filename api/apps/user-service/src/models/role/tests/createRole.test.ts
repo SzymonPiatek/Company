@@ -1,78 +1,81 @@
 import request from 'supertest';
-import prisma from '../../../prismaClient';
 import app from '../../../app';
-import { createTestUser, mockAccessToken } from '@libs/tests/setup';
+import prisma from '../../../prismaClient';
+
+jest.mock('../../../prismaClient', () => ({
+  role: {
+    findUnique: jest.fn(),
+    create: jest.fn(),
+  },
+}));
+
+jest.mock(
+  '../../../../../../libs/helpers/middlewares/auth.middleware',
+  () => (_req: any, _res: any, next: any) => next(),
+);
+jest.mock(
+  '../../../../../../libs/helpers/middlewares/emptyBody.middleware',
+  () => (_req: any, _res: any, next: any) => next(),
+);
 
 const baseUrl = '/api/user/roles';
-const testEmail = 'createrole@example.com';
-const testPassword = 'Test1234!';
 
-describe('POST /api/user/roles', () => {
-  let testUserId: string;
-  let accessToken: string;
-
-  const postRequest = async (body: object) => {
-    return await request(app)
-      .post(baseUrl)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(body);
-  };
-
-  beforeAll(async () => {
-    const user = await createTestUser(prisma, {
-      email: testEmail,
-      password: testPassword,
-    });
-
-    testUserId = user.id;
-    accessToken = mockAccessToken(testUserId);
-  });
-
-  afterAll(async () => {
-    await prisma.user.delete({ where: { id: testUserId } });
-    await prisma.role.deleteMany({ where: { name: { contains: 'Test Role' } } });
+describe('POST /api/user/roles (mocked)', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should create a new role and return 201', async () => {
-    const res = await postRequest({
-      name: `Test Role ${Date.now()}`,
-      description: 'Test description',
+    const mockRole = {
+      id: 'uuid-123',
+      name: 'Test Role Mocked',
+      description: 'Mock description',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    (prisma.role.findUnique as jest.Mock).mockResolvedValue(null);
+    (prisma.role.create as jest.Mock).mockResolvedValue(mockRole);
+
+    const res = await request(app)
+      .post(baseUrl)
+      .send({ name: mockRole.name, description: mockRole.description });
+
+    expect(prisma.role.findUnique).toHaveBeenCalledWith({ where: { name: mockRole.name } });
+    expect(prisma.role.create).toHaveBeenCalledWith({
+      data: { name: mockRole.name, description: mockRole.description },
     });
 
     expect(res.status).toBe(201);
-    expect(res.body).toHaveProperty('id');
     expect(res.body).toMatchObject({
-      name: expect.stringMatching(/^Test Role/),
-      description: 'Test description',
+      id: mockRole.id,
+      name: mockRole.name,
+      description: mockRole.description,
     });
   });
 
   it('should return 400 if name is missing', async () => {
-    const res = await postRequest({ description: 'Missing name' });
+    const res = await request(app).post(baseUrl).send({});
 
     expect(res.status).toBe(400);
-    expect(res.body).toEqual('Name is required');
+    expect(res.body).toBe('Name is required');
   });
 
-  it('should return 400 if role with same name exists', async () => {
-    const roleName = `Test Role Duplicate ${Date.now()}`;
+  it('should return 400 if role already exists', async () => {
+    (prisma.role.findUnique as jest.Mock).mockResolvedValue({ id: 'existing-id' });
 
-    await prisma.role.create({ data: { name: roleName } });
-
-    const res = await postRequest({ name: roleName });
+    const res = await request(app).post(baseUrl).send({ name: 'Existing Role' });
 
     expect(res.status).toBe(400);
     expect(res.body).toEqual({ error: 'Role with this name already exists' });
   });
 
   it('should return 500 on internal error', async () => {
-    const spy = jest.spyOn(prisma.role, 'findUnique').mockRejectedValueOnce(new Error('DB error'));
+    (prisma.role.findUnique as jest.Mock).mockRejectedValue(new Error('Unexpected DB Error'));
 
-    const res = await postRequest({ name: `Test Role ${Date.now()}` });
+    const res = await request(app).post(baseUrl).send({ name: 'Error Role' });
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Internal Server Error');
-
-    spy.mockRestore();
+    expect(res.body.error).toEqual('Internal Server Error');
   });
 });
