@@ -1,6 +1,7 @@
 export default {
   testEnvironment: 'node',
   moduleFileExtensions: ['ts', 'js', 'json'],
+  setupFiles: ['<rootDir>/libs/tests/setup.ts'],
   transform: {
     '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
   },

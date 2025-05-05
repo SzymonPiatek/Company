@@ -1,66 +1,67 @@
 import request from 'supertest';
-import prisma from '../../../prismaClient';
 import app from '../../../app';
-import { createTestUser, mockAccessToken } from '@libs/tests/setup';
+import prisma from '../../../prismaClient';
 
-const baseUrl = (id: string) => `/api/user/users/${id}`;
-const testEmail = 'getuser@example.com';
-const testPassword = 'Test1234!';
+jest.mock('../../../prismaClient', () => ({
+  user: {
+    findUnique: jest.fn(),
+  },
+}));
 
-describe('GET /users/:id', () => {
-  let testUserId: string;
-  let accessToken: string;
+const baseUrl = '/api/user/users';
 
-  const getRequest = (id: string) =>
-    request(app).get(baseUrl(id)).set('Authorization', `Bearer ${accessToken}`);
+describe('GET /api/user/users/:id (mocked)', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-  beforeAll(async () => {
-    const user = await createTestUser(prisma, {
-      email: testEmail,
-      password: testPassword,
-      firstName: 'Get',
-      lastName: 'User',
+  it('should return a user by ID with status 200', async () => {
+    const userId = 'user-123';
+    const mockUser = {
+      id: userId,
+      email: 'john@example.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
+
+    const res = await request(app).get(`${baseUrl}/${userId}`);
+
+    expect(prisma.user.findUnique).toHaveBeenCalledWith({
+      where: { id: userId },
+      omit: { password: true },
     });
-
-    testUserId = user.id;
-    accessToken = mockAccessToken(testUserId);
-  });
-
-  afterAll(async () => {
-    await prisma.user.delete({ where: { id: testUserId } });
-  });
-
-  it('should return user by id', async () => {
-    const res = await getRequest(testUserId);
 
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({
-      id: testUserId,
-      email: testEmail,
-      firstName: 'Get',
-      lastName: 'User',
+      id: userId,
+      email: mockUser.email,
+      firstName: mockUser.firstName,
+      lastName: mockUser.lastName,
     });
-
-    expect(res.body.password).toBeUndefined();
+    expect(res.body).not.toHaveProperty('password');
   });
 
-  it('should return 404 if user not found', async () => {
-    const nonExistentId = '00000000-0000-0000-0000-000000000000';
+  it('should return 404 if user is not found', async () => {
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
 
-    const res = await getRequest(nonExistentId);
+    const res = await request(app).get(`${baseUrl}/nonexistent-id`);
 
     expect(res.status).toBe(404);
-    expect(res.body.error).toBe('User not found');
+    expect(res.body).toEqual({ error: 'User not found' });
   });
 
-  it('should return 500 on prisma error', async () => {
-    const spy = jest.spyOn(prisma.user, 'findUnique').mockRejectedValueOnce(new Error('DB broke'));
+  it('should return 500 on internal error', async () => {
+    (prisma.user.findUnique as jest.Mock).mockRejectedValue(new Error('DB Error'));
 
-    const res = await getRequest('fake-id');
+    const res = await request(app).get(`${baseUrl}/error-id`);
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Internal Server Error');
-
-    spy.mockRestore();
+    expect(res.body).toHaveProperty('error', 'Internal Server Error');
+    expect(res.body).toHaveProperty('details');
   });
 });

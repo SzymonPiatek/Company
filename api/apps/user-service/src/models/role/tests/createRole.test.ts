@@ -9,15 +9,6 @@ jest.mock('../../../prismaClient', () => ({
   },
 }));
 
-jest.mock(
-  '../../../../../../libs/helpers/middlewares/auth.middleware',
-  () => (_req: any, _res: any, next: any) => next(),
-);
-jest.mock(
-  '../../../../../../libs/helpers/middlewares/emptyBody.middleware',
-  () => (_req: any, _res: any, next: any) => next(),
-);
-
 const baseUrl = '/api/user/roles';
 
 describe('POST /api/user/roles (mocked)', () => {
