@@ -14,16 +14,20 @@ const createRoleHandler: RequestHandler = async (req, res) => {
     return;
   }
 
-  const isNameExists = await prisma.role.findUnique({ where: { name: data.name } });
+  try {
+    const isNameExists = await prisma.role.findUnique({ where: { name: data.name } });
 
-  if (isNameExists) {
-    res.status(400).json({ error: 'Role with this name already exists' });
-    return;
+    if (isNameExists) {
+      res.status(400).json({ error: 'Role with this name already exists' });
+      return;
+    }
+
+    const role = await prisma.role.create({ data });
+
+    res.status(201).send(role);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error', details: error });
   }
-
-  const role = await prisma.role.create({ data });
-
-  res.status(201).send(role);
 };
 
 export default createRoleHandler;
