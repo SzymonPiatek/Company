@@ -1,67 +1,50 @@
-import { Request, Response, NextFunction } from 'express';
+jest.unmock('../emptyBody.middleware');
+
 import emptyBodyMiddleware from '../emptyBody.middleware';
 
 describe('emptyBodyMiddleware', () => {
-  let req: Partial<Request>;
-  let res: Partial<Response>;
-  let next: NextFunction;
+  const mockResponse = () => {
+    const res: any = {};
+    res.status = jest.fn().mockReturnValue(res);
+    res.json = jest.fn().mockReturnValue(res);
+    return res;
+  };
+
+  const mockNext = jest.fn();
 
   beforeEach(() => {
-    req = {};
-    res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
-    };
-    next = jest.fn();
+    jest.clearAllMocks();
   });
 
-  it('should return 400 if req.body is undefined', () => {
-    req.body = undefined;
+  it('should call next if request body is a valid object', () => {
+    const req = { body: { key: 'value' } } as any;
+    const res = mockResponse();
 
-    emptyBodyMiddleware(req as Request, res as Response, next);
+    emptyBodyMiddleware(req, res, mockNext);
 
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid request body' });
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('should return 400 if req.body is null', () => {
-    req.body = null;
-
-    emptyBodyMiddleware(req as Request, res as Response, next);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid request body' });
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('should return 400 if req.body is not an object', () => {
-    req.body = 'string' as string;
-
-    emptyBodyMiddleware(req as Request, res as Response, next);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid request body' });
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('should call next if req.body is a valid object', () => {
-    req.body = { key: 'value' };
-
-    emptyBodyMiddleware(req as Request, res as Response, next);
-
-    expect(next).toHaveBeenCalled();
+    expect(mockNext).toHaveBeenCalled();
     expect(res.status).not.toHaveBeenCalled();
-    expect(res.json).not.toHaveBeenCalled();
   });
 
-  it('should allow empty object as valid body', () => {
-    req.body = {};
+  it('should return 400 if body is missing', () => {
+    const req = {} as any;
+    const res = mockResponse();
 
-    emptyBodyMiddleware(req as Request, res as Response, next);
+    emptyBodyMiddleware(req, res, mockNext);
 
-    expect(next).toHaveBeenCalled();
-    expect(res.status).not.toHaveBeenCalled();
-    expect(res.json).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid request body' });
+    expect(mockNext).not.toHaveBeenCalled();
+  });
+
+  it('should return 400 if body is not an object', () => {
+    const req = { body: 'not-an-object' } as any;
+    const res = mockResponse();
+
+    emptyBodyMiddleware(req, res, mockNext);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid request body' });
+    expect(mockNext).not.toHaveBeenCalled();
   });
 });

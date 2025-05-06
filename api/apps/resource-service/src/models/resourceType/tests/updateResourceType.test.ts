@@ -25,6 +25,10 @@ describe('PATCH /api/resource/resourceTypes/:id (mocked)', () => {
     jest.clearAllMocks();
   });
 
+  beforeAll(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
   it('should update resource type and update codes if code changed', async () => {
     const existingType = {
       id: typeId,

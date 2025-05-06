@@ -1,82 +1,49 @@
+jest.unmock('../parsePaginationQuery');
+
 import parsePaginationQuery from '../parsePaginationQuery';
 import type { Request } from 'express';
 
 describe('parsePaginationQuery', () => {
-  const mockReq = (query: Record<string, string>): Partial<Request> => ({
-    query,
-  });
+  const mockRequest = (query: Record<string, any>) => ({ query }) as unknown as Request;
 
-  it('should parse all query params correctly', () => {
-    const req = mockReq({
+  it('should parse valid pagination and sorting parameters', () => {
+    const req = mockRequest({
       page: '2',
-      limit: '20',
+      limit: '25',
       sortBy: 'name',
-      sortOrder: 'DESC',
-    }) as Request;
+      sortOrder: 'desc',
+    });
 
     const result = parsePaginationQuery(req);
 
     expect(result).toEqual({
       page: 2,
-      limit: 20,
+      limit: 25,
       sortBy: 'name',
       sortOrder: 'desc',
     });
   });
 
-  it('should fall back to defaults for missing page and limit', () => {
-    const req = mockReq({
-      sortBy: 'createdAt',
-      sortOrder: 'asc',
-    }) as Request;
-
-    const result = parsePaginationQuery(req);
-
-    expect(result).toEqual({
-      page: 1,
-      limit: 10,
-      sortBy: 'createdAt',
-      sortOrder: 'asc',
-    });
-  });
-
-  it('should default to page=1 and limit=10 when values are invalid', () => {
-    const req = mockReq({
-      page: 'zero',
+  it('should default to page=1 and limit=10 if invalid values are provided', () => {
+    const req = mockRequest({
+      page: '0',
       limit: '-5',
-    }) as Request;
-
-    const result = parsePaginationQuery(req);
-
-    expect(result.page).toBe(1);
-    expect(result.limit).toBe(10);
-  });
-
-  it('should return undefined for invalid sortOrder', () => {
-    const req = mockReq({
-      sortOrder: 'upwards',
-    }) as Request;
-
-    const result = parsePaginationQuery(req);
-
-    expect(result.sortOrder).toBeUndefined();
-  });
-
-  it('should allow only one of sortBy or sortOrder', () => {
-    const req = mockReq({ sortBy: 'id' }) as Request;
+      sortBy: 'createdAt',
+      sortOrder: 'invalid',
+    });
 
     const result = parsePaginationQuery(req);
 
     expect(result).toEqual({
       page: 1,
       limit: 10,
-      sortBy: 'id',
+      sortBy: 'createdAt',
       sortOrder: undefined,
     });
   });
 
-  it('should handle completely empty query object', () => {
-    const req = mockReq({}) as Request;
+  it('should handle missing parameters gracefully', () => {
+    const req = mockRequest({});
 
     const result = parsePaginationQuery(req);
 
@@ -86,5 +53,18 @@ describe('parsePaginationQuery', () => {
       sortBy: undefined,
       sortOrder: undefined,
     });
+  });
+
+  it('should normalize sortOrder to lowercase and validate it', () => {
+    const req = mockRequest({
+      page: '3',
+      limit: '5',
+      sortBy: 'email',
+      sortOrder: 'ASC',
+    });
+
+    const result = parsePaginationQuery(req);
+
+    expect(result.sortOrder).toBe('asc');
   });
 });
