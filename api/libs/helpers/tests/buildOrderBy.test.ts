@@ -88,4 +88,23 @@ describe('buildOrderBy', () => {
 
     expect(result).toEqual({});
   });
+
+  it('should allow any field if allowedFields is not provided', () => {
+    const result = buildOrderBy<any>({
+      sortBy: 'randomField',
+      sortOrder: 'asc',
+    });
+
+    expect(result).toEqual({ randomField: 'asc' });
+  });
+
+  it('should allow any field if allowedFields is an empty array', () => {
+    const result = buildOrderBy<any>({
+      sortBy: 'anything',
+      sortOrder: 'desc',
+      allowedFields: [],
+    });
+
+    expect(result).toEqual({ anything: 'desc' });
+  });
 });

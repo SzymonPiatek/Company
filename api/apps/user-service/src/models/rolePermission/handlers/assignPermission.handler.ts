@@ -9,11 +9,6 @@ type RolePermissionParamsProps = {
 const assignPermissionHandler: RequestHandler = async (req, res) => {
   const data = req.params as RolePermissionParamsProps;
 
-  if (!data.permissionId || !data.roleId) {
-    res.status(400).json({ error: 'PermissionId and roleId are required' });
-    return;
-  }
-
   try {
     const role = await prisma.role.findUnique({
       where: { id: data.roleId },

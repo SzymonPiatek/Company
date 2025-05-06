@@ -55,6 +55,15 @@ describe('POST /api/warehouse/assignedResources (mocked)', () => {
     expect(res.body).toHaveProperty('error', 'Resource not found');
   });
 
+  it('should return 404 if resource check returns empty data', async () => {
+    (axios.get as jest.Mock).mockResolvedValueOnce({ data: null });
+
+    const res = await request(app).post(baseUrl).send(validPayload);
+
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty('error', 'Resource not found');
+  });
+
   it('should return 500 on internal error', async () => {
     (axios.get as jest.Mock).mockResolvedValueOnce({ data: { id: validPayload.resourceId } });
     (prisma.$transaction as jest.Mock).mockRejectedValueOnce(new Error('DB error'));

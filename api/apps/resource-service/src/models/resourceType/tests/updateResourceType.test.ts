@@ -97,6 +97,27 @@ describe('PATCH /api/resource/resourceTypes/:id (mocked)', () => {
     expect(res.body).toEqual({ error: 'Resource name already exists' });
   });
 
+  it('should return 409 if code already exists', async () => {
+    (prisma.resourceType.findUnique as jest.Mock).mockResolvedValue({
+      id: typeId,
+      name: 'CurrentName',
+      code: 'RES',
+    });
+
+    (prisma.resourceType.findFirst as jest.Mock).mockImplementation(({ where }) => {
+      if (where.name === 'CurrentName') return null;
+      if (where.code === 'RES_DUPLICATE') return { id: 'other-id' };
+      return null;
+    });
+
+    const res = await request(app)
+      .patch(endpoint)
+      .send({ name: 'CurrentName', code: 'RES_DUPLICATE' });
+
+    expect(res.status).toBe(409);
+    expect(res.body).toEqual({ error: 'Resource code already exists' });
+  });
+
   it('should return 500 on prisma error', async () => {
     (prisma.resourceType.findUnique as jest.Mock).mockRejectedValue(new Error('DB fail'));
 
