@@ -1,10 +1,12 @@
+import type { Request, Response, NextFunction } from 'express';
+
 jest.mock(
   '../helpers/middlewares/auth.middleware',
-  () => (_req: any, _res: any, next: any) => next(),
+  () => (_req: Request, _res: Response, next: NextFunction) => next(),
 );
 jest.mock(
   '../helpers/middlewares/emptyBody.middleware',
-  () => (_req: any, _res: any, next: any) => next(),
+  () => (_req: Request, _res: Response, next: NextFunction) => next(),
 );
 jest.mock('axios');
 jest.mock('../helpers/parsePaginationQuery', () => jest.fn());

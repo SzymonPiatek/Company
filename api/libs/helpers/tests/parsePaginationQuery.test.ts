@@ -3,8 +3,15 @@ jest.unmock('../parsePaginationQuery');
 import parsePaginationQuery from '../parsePaginationQuery';
 import type { Request } from 'express';
 
+type QueryParams = {
+  page?: string;
+  limit?: string;
+  sortBy?: string;
+  sortOrder?: string;
+};
+
 describe('parsePaginationQuery', () => {
-  const mockRequest = (query: Record<string, any>) => ({ query }) as unknown as Request;
+  const mockRequest = (query: QueryParams): Request => ({ query }) as unknown as Request;
 
   it('should parse valid pagination and sorting parameters', () => {
     const req = mockRequest({
