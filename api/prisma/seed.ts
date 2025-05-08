@@ -5,6 +5,7 @@ import createResources from '../libs/seed/resource-service/resources';
 import createResourceLocations from '../libs/seed/warehouse-service/resourceLocations';
 import cleaningData from '../libs/seed/cleaningData';
 import createAssignedResourcesAndResourceLocationHistories from '../libs/seed/warehouse-service/assignedResourcesAndResourceLocationHistories';
+import createPermissionsRolesRolePermissions from '@libs/seed/user-service/permissionsRolesRolePermissions';
 
 const prisma = new PrismaClient();
 
@@ -32,8 +33,11 @@ async function main() {
   // START SEED
   console.log('Start seeding data...');
 
+  // PERMISSIONS, ROLE, ROLE PERMISSIONS
+  const { roles } = await createPermissionsRolesRolePermissions({ prisma });
+
   // USERS
-  await createUsers({ prisma, length: 5, password: 'TestPass123!' });
+  await createUsers({ prisma, roles, length: 9, password: 'TestPass123!' });
 
   // RESOURCE TYPES
   await createResourceTypes({ prisma });
