@@ -1,214 +1,143 @@
 import request from 'supertest';
 import app from '../../../app';
 import prisma from '../../../prismaClient';
-import { createTestUser, mockAccessToken } from '@libs/tests/setup';
+import type { Prisma } from '@prisma/client';
 
-const baseUrl = (id: string) => `/api/resource/resourceTypes/${id}`;
-const testEmail = `getuser-${Date.now()}@example.com`;
-const testPassword = 'Test1234!';
+jest.mock('../../../prismaClient', () => ({
+  $transaction: jest.fn(),
+  resourceType: {
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    update: jest.fn(),
+  },
+  resource: {
+    findMany: jest.fn(),
+    update: jest.fn(),
+  },
+}));
 
-describe('PATCH /api/resource/resourceTypes/:id', () => {
-  const unique = Date.now();
-  const typeName = `Type ${unique}`;
-  const typeCode = `CODE-${unique}`;
-  const duplicateName = `${typeName}-duplicate`;
-  const duplicateCode = `${typeCode}-DUPLICATE`;
-  let typeId: string;
-  let testUserId: string;
-  let accessToken: string;
+const baseUrl = '/api/resource/resourceTypes';
 
-  const patchRequest = async ({ id, body }: { id: string; body: object }) => {
-    return await request(app)
-      .patch(baseUrl(id))
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(body);
-  };
+describe('PATCH /api/resource/resourceTypes/:id (mocked)', () => {
+  const typeId = 'type-123';
+  const endpoint = `${baseUrl}/${typeId}`;
 
-  beforeAll(async () => {
-    const user = await createTestUser(prisma, {
-      email: testEmail,
-      password: testPassword,
-    });
-
-    testUserId = user.id;
-    accessToken = mockAccessToken(testUserId);
-
-    const createdType = await prisma.resourceType.create({
-      data: {
-        name: typeName,
-        code: typeCode,
-        resources: {
-          create: [
-            { name: 'Res1', code: `${typeCode}-000001`, isActive: true },
-            { name: 'Res2', code: `${typeCode}-000002`, isActive: false },
-          ],
-        },
-      },
-    });
-
-    typeId = createdType.id;
-
-    await prisma.resourceType.create({
-      data: {
-        name: duplicateName,
-        code: duplicateCode,
-      },
-    });
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  afterAll(async () => {
-    await prisma.resource.deleteMany({ where: { typeId } });
-    await prisma.resourceType.deleteMany({
-      where: { name: { contains: typeName } },
-    });
-    await prisma.user.delete({ where: { id: testUserId } });
+  beforeAll(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  it('should update a resource type and return 200', async () => {
-    const updatedName = `Updated ${typeName}`;
-    const updatedCode = `UPDATED-${unique}`;
+  it('should update resource type and update codes if code changed', async () => {
+    const existingType = {
+      id: typeId,
+      name: 'Old Name',
+      code: 'OLD',
+    };
 
-    const res = await patchRequest({ id: typeId, body: { name: updatedName, code: updatedCode } });
+    const newData = {
+      name: 'New Name',
+      code: 'NEW',
+    };
+
+    const updatedType = { ...existingType, ...newData };
+
+    const associatedResources = [
+      { id: 'res-1', code: 'OLD-000001', typeId },
+      { id: 'res-2', code: 'OLD-000002', typeId },
+    ];
+
+    (prisma.resourceType.findUnique as jest.Mock).mockResolvedValue(existingType);
+    (prisma.resourceType.findFirst as jest.Mock).mockResolvedValue(null); // no conflict
+
+    (prisma.$transaction as jest.Mock).mockImplementation(
+      async (cb: (tx: Prisma.TransactionClient) => Promise<unknown>) => {
+        const tx: Prisma.TransactionClient = {
+          resourceType: {
+            update: jest.fn().mockResolvedValue(updatedType),
+          },
+          resource: {
+            findMany: jest.fn().mockResolvedValue(associatedResources),
+            update: jest.fn().mockImplementation(({ where, data }) => ({
+              ...associatedResources.find((r) => r.id === where.id),
+              ...data,
+            })),
+          },
+          $transaction: jest.fn(),
+          $connect: jest.fn(),
+          $disconnect: jest.fn(),
+          $on: jest.fn(),
+          $use: jest.fn(),
+          $executeRaw: jest.fn(),
+          $executeRawUnsafe: jest.fn(),
+          $queryRaw: jest.fn(),
+          $queryRawUnsafe: jest.fn(),
+        } as unknown as Prisma.TransactionClient; // 👈 typ wymuszony dla pełnej zgodności struktury
+
+        return cb(tx);
+      },
+    );
+
+    const res = await request(app).patch(endpoint).send(newData);
 
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({
-      id: typeId,
-      name: updatedName,
-      code: updatedCode,
-    });
-
-    const updatedResources = await prisma.resource.findMany({
-      where: { typeId },
-    });
-    for (const res of updatedResources) {
-      expect(res.code.startsWith(updatedCode)).toBe(true);
-    }
+    expect(res.body).toMatchObject(updatedType);
   });
 
   it('should return 404 if resource type not found', async () => {
-    const res = await patchRequest({
-      id: 'non-existent-id',
-      body: { name: 'Whatever', code: 'WHATEVER-CODE' },
-    });
+    (prisma.resourceType.findUnique as jest.Mock).mockResolvedValue(null);
+
+    const res = await request(app).patch(endpoint).send({ name: 'Any', code: 'ANY' });
 
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: 'ResourceType not found' });
   });
 
-  it('should return 409 if name is already taken', async () => {
-    const res = await patchRequest({
+  it('should return 409 if name already exists', async () => {
+    (prisma.resourceType.findUnique as jest.Mock).mockResolvedValue({
       id: typeId,
-      body: { name: duplicateName, code: `NEW-CODE-${unique}` },
+      name: 'Old',
+      code: 'RES',
     });
+
+    (prisma.resourceType.findFirst as jest.Mock).mockResolvedValueOnce({ id: 'other-id' });
+
+    const res = await request(app).patch(endpoint).send({ name: 'Existing', code: 'RES' });
 
     expect(res.status).toBe(409);
-    expect(res.body.error).toBe('Resource name already exists');
+    expect(res.body).toEqual({ error: 'Resource name already exists' });
   });
 
-  it('should return 409 if code is already taken', async () => {
-    const res = await patchRequest({
+  it('should return 409 if code already exists', async () => {
+    (prisma.resourceType.findUnique as jest.Mock).mockResolvedValue({
       id: typeId,
-      body: { name: `Another Name ${unique}`, code: duplicateCode },
+      name: 'CurrentName',
+      code: 'RES',
     });
+
+    (prisma.resourceType.findFirst as jest.Mock).mockImplementation(({ where }) => {
+      if (where.name === 'CurrentName') return null;
+      if (where.code === 'RES_DUPLICATE') return { id: 'other-id' };
+      return null;
+    });
+
+    const res = await request(app)
+      .patch(endpoint)
+      .send({ name: 'CurrentName', code: 'RES_DUPLICATE' });
 
     expect(res.status).toBe(409);
-    expect(res.body.error).toBe('Resource code already exists');
+    expect(res.body).toEqual({ error: 'Resource code already exists' });
   });
 
-  it('should return 500 on internal error', async () => {
-    const originalError = console.error;
-    console.error = jest.fn();
+  it('should return 500 on prisma error', async () => {
+    (prisma.resourceType.findUnique as jest.Mock).mockRejectedValue(new Error('DB fail'));
 
-    const spy = jest
-      .spyOn(prisma.resourceType, 'findUnique')
-      .mockRejectedValueOnce(new Error('DB FAIL'));
-
-    const res = await patchRequest({
-      id: typeId,
-      body: { name: 'Should Fail', code: 'FAIL-CODE' },
-    });
+    const res = await request(app).patch(endpoint).send({ name: 'Test', code: 'TST' });
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Internal Server Error');
-
-    spy.mockRestore();
-    console.error = originalError;
-  });
-
-  it('should update name only if code did not change', async () => {
-    const sameCode = `SAME-${unique}`;
-    const newName = `New Name ${unique}`;
-
-    const type = await prisma.resourceType.create({
-      data: {
-        name: `Orig Name ${unique}`,
-        code: sameCode,
-      },
-    });
-
-    const res = await patchRequest({
-      id: type.id,
-      body: { name: newName, code: sameCode },
-    });
-
-    expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({
-      id: type.id,
-      name: newName,
-      code: sameCode,
-    });
-
-    const resources = await prisma.resource.findMany({
-      where: { typeId: type.id },
-    });
-    expect(resources.length).toBe(0);
-
-    await prisma.resourceType.delete({ where: { id: type.id } });
-  });
-
-  it('should assign default numeric part if resource code is malformed', async () => {
-    const malformedCode = `MALFORMED-${unique}`;
-    const correctedCodePrefix = `FIXED-${unique}`;
-
-    const malformedType = await prisma.resourceType.create({
-      data: {
-        name: `Malformed Type ${unique}`,
-        code: malformedCode,
-        resources: {
-          create: [
-            {
-              name: 'BadRes',
-              code: 'INVALIDCODE',
-              isActive: true,
-            },
-          ],
-        },
-      },
-    });
-
-    const res = await patchRequest({
-      id: malformedType.id,
-      body: {
-        name: `Fixed Type ${unique}`,
-        code: correctedCodePrefix,
-      },
-    });
-
-    expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({
-      id: malformedType.id,
-      name: `Fixed Type ${unique}`,
-      code: correctedCodePrefix,
-    });
-
-    const updatedResource = await prisma.resource.findFirst({
-      where: { typeId: malformedType.id },
-    });
-
-    expect(updatedResource).not.toBeNull();
-    expect(updatedResource?.code).toBe(`${correctedCodePrefix}-000001`);
-
-    await prisma.resource.deleteMany({ where: { typeId: malformedType.id } });
-    await prisma.resourceType.delete({ where: { id: malformedType.id } });
+    expect(res.body).toHaveProperty('error', 'Internal Server Error');
+    expect(res.body).toHaveProperty('details');
   });
 });

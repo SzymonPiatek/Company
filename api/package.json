@@ -6,8 +6,8 @@
   ],
   "scripts": {
     "seed": "npx prisma db seed",
-    "generate": "prisma generate --schema=./prisma",
-    "migrate:dev": "prisma migrate dev --schema=./prisma",
+    "generate": "npx prisma generate --schema=./prisma",
+    "migrate:dev": "npx prisma migrate dev --schema=./prisma",
     "dev:user": "tsx watch apps/user-service/src/server.ts",
     "dev:resource": "tsx watch apps/resource-service/src/server.ts",
     "dev:warehouse": "tsx watch apps/warehouse-service/src/server.ts",

@@ -1,98 +1,77 @@
 import request from 'supertest';
-import prisma from '../../../prismaClient';
 import app from '../../../app';
-import { v4 as uuid } from 'uuid';
-import { createTestUser, mockAccessToken } from '@libs/tests/setup';
+import prisma from '../../../prismaClient';
 
-const baseUrl = (id: string) => `/api/warehouse/resourceLocations/${id}`;
-const testEmail = 'getuser@example.com';
-const testPassword = 'Test1234!';
+jest.mock('../../../prismaClient', () => ({
+  resourceLocation: {
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    update: jest.fn(),
+  },
+}));
 
-describe('PATCH /resourceLocations/:id', () => {
-  let locationAId: string;
-  let locationBId: string;
-  let testUserId: string;
-  let accessToken: string;
+const baseUrl = '/api/warehouse/resourceLocations';
 
-  const patchRequest = ({ id, body }: { id: string; body: object }) =>
-    request(app).patch(baseUrl(id)).set('Authorization', `Bearer ${accessToken}`).send(body);
+describe('PATCH /api/warehouse/resourceLocations/:id (mocked)', () => {
+  const locationId = 'loc-123';
+  const endpoint = `${baseUrl}/${locationId}`;
 
-  beforeAll(async () => {
-    const user = await createTestUser(prisma, {
-      email: testEmail,
-      password: testPassword,
-      firstName: 'Get',
-      lastName: 'User',
-    });
-
-    testUserId = user.id;
-    accessToken = mockAccessToken(testUserId);
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  afterAll(async () => {
-    await prisma.user.delete({ where: { id: testUserId } });
-  });
+  it('should update resource location and return 200', async () => {
+    const updateData = { name: 'New Name', description: 'Updated desc' };
+    const existing = { id: locationId, name: 'Old Name' };
+    const updated = { id: locationId, ...updateData };
 
-  beforeEach(async () => {
-    locationAId = uuid();
-    locationBId = uuid();
+    (prisma.resourceLocation.findUnique as jest.Mock).mockResolvedValue(existing);
+    (prisma.resourceLocation.findFirst as jest.Mock).mockResolvedValue(null);
+    (prisma.resourceLocation.update as jest.Mock).mockResolvedValue(updated);
 
-    await prisma.resourceLocation.createMany({
-      data: [
-        { id: locationAId, name: 'Main A' },
-        { id: locationBId, name: 'Main B' },
-      ],
-    });
-  });
+    const res = await request(app).patch(endpoint).send(updateData);
 
-  afterEach(async () => {
-    await prisma.assignedResource.deleteMany({
-      where: { locationId: { in: [locationAId, locationBId] } },
+    expect(prisma.resourceLocation.findUnique).toHaveBeenCalledWith({ where: { id: locationId } });
+    expect(prisma.resourceLocation.findFirst).toHaveBeenCalledWith({
+      where: { name: updateData.name, NOT: { id: locationId } },
     });
-    await prisma.resourceLocationHistory.deleteMany({
-      where: {
-        OR: [
-          { fromLocationId: { in: [locationAId, locationBId] } },
-          { toLocationId: { in: [locationAId, locationBId] } },
-        ],
-      },
+    expect(prisma.resourceLocation.update).toHaveBeenCalledWith({
+      where: { id: locationId },
+      data: updateData,
     });
-    await prisma.resourceLocation.deleteMany({
-      where: { id: { in: [locationAId, locationBId] } },
-    });
-  });
-
-  it('should update the location name and return 200', async () => {
-    const res = await patchRequest({ id: locationAId, body: { name: 'Updated A' } });
 
     expect(res.status).toBe(200);
-    expect(res.body.name).toBe('Updated A');
+    expect(res.body).toMatchObject(updateData);
   });
 
-  it('should return 409 if name is already taken', async () => {
-    const res = await patchRequest({ id: locationAId, body: { name: 'Main B' } });
+  it('should return 404 if location not found', async () => {
+    (prisma.resourceLocation.findUnique as jest.Mock).mockResolvedValue(null);
 
-    expect(res.status).toBe(409);
-    expect(res.body.error).toBe('Resource location with this name already exists.');
-  });
-
-  it('should return 404 if resource location not found', async () => {
-    const res = await patchRequest({ id: 'non-existent-id', body: { name: 'Whatever' } });
+    const res = await request(app).patch(endpoint).send({ name: 'Name' });
 
     expect(res.status).toBe(404);
-    expect(res.body.error).toBe('Resource location not found');
+    expect(res.body).toEqual({ error: 'Resource location not found' });
+  });
+
+  it('should return 409 if name is already taken by another location', async () => {
+    (prisma.resourceLocation.findUnique as jest.Mock).mockResolvedValue({ id: locationId });
+    (prisma.resourceLocation.findFirst as jest.Mock).mockResolvedValue({ id: 'other-id' });
+
+    const res = await request(app).patch(endpoint).send({ name: 'Duplicate Name' });
+
+    expect(res.status).toBe(409);
+    expect(res.body).toEqual({
+      error: 'Resource location with this name already exists.',
+    });
   });
 
   it('should return 500 on internal error', async () => {
-    const spy = jest
-      .spyOn(prisma.resourceLocation, 'update')
-      .mockRejectedValueOnce(new Error('Simulated fail'));
+    (prisma.resourceLocation.findUnique as jest.Mock).mockRejectedValue(new Error('DB error'));
 
-    const res = await patchRequest({ id: locationAId, body: { description: 'Whatever' } });
+    const res = await request(app).patch(endpoint).send({ name: 'Any' });
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Internal Server Error');
-
-    spy.mockRestore();
+    expect(res.body).toHaveProperty('error', 'Internal Server Error');
+    expect(res.body).toHaveProperty('details');
   });
 });

@@ -1,10 +1,12 @@
 export default {
   testEnvironment: 'node',
   moduleFileExtensions: ['ts', 'js', 'json'],
+  setupFiles: ['<rootDir>/libs/tests/setup.ts'],
   transform: {
     '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
   },
   moduleNameMapper: {
+    '^@apps/(.*)$': '<rootDir>/apps/$1',
     '^@libs/(.*)$': '<rootDir>/libs/$1',
   },
   rootDir: './',

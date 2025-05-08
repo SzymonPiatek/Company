@@ -32,7 +32,8 @@ function buildOrderBy<T>({
   for (let i = 0; i < path.length; i++) {
     const key = path[i];
     const isRelation = currentAllowed.relations?.[key];
-    const isField = currentAllowed.fields.length > 0 ? currentAllowed.fields.includes(key) : true;
+    const isField =
+      currentAllowed.fields.length > 0 ? currentAllowed.fields.includes(key as string) : true;
     const isLast = i === path.length - 1;
 
     if (isLast) {
