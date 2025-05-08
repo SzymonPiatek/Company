@@ -1,6 +1,5 @@
 import request from 'supertest';
 import app from '../../../app';
-import prisma from '@apps/user-service/src/prismaClient';
 import parsePaginationQuery from '@libs/helpers/parsePaginationQuery';
 import buildOrderBy from '@libs/helpers/buildOrderBy';
 import paginateData from '@libs/helpers/paginateData';

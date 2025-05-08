@@ -1,4 +1,4 @@
-import { RequestHandler } from 'express';
+import type { RequestHandler } from 'express';
 import prisma from '@apps/user-service/src/prismaClient';
 
 type PermissionParamsProps = {
@@ -8,6 +8,8 @@ type PermissionParamsProps = {
 type PermissionBodyProps = {
   name?: string;
   description?: string;
+  action?: string;
+  subject?: string;
 };
 
 const updatePermissionHandler: RequestHandler = async (req, res) => {

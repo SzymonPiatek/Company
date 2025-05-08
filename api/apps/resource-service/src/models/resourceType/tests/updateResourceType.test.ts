@@ -1,6 +1,7 @@
 import request from 'supertest';
 import app from '../../../app';
 import prisma from '../../../prismaClient';
+import type { Prisma } from '@prisma/client';
 
 jest.mock('../../../prismaClient', () => ({
   $transaction: jest.fn(),
@@ -51,21 +52,33 @@ describe('PATCH /api/resource/resourceTypes/:id (mocked)', () => {
     (prisma.resourceType.findUnique as jest.Mock).mockResolvedValue(existingType);
     (prisma.resourceType.findFirst as jest.Mock).mockResolvedValue(null); // no conflict
 
-    (prisma.$transaction as jest.Mock).mockImplementation(async (cb: any) => {
-      const tx = {
-        resourceType: {
-          update: jest.fn().mockResolvedValue(updatedType),
-        },
-        resource: {
-          findMany: jest.fn().mockResolvedValue(associatedResources),
-          update: jest.fn().mockImplementation(({ where, data }) => ({
-            ...associatedResources.find((r) => r.id === where.id),
-            ...data,
-          })),
-        },
-      };
-      return await cb(tx);
-    });
+    (prisma.$transaction as jest.Mock).mockImplementation(
+      async (cb: (tx: Prisma.TransactionClient) => Promise<unknown>) => {
+        const tx: Prisma.TransactionClient = {
+          resourceType: {
+            update: jest.fn().mockResolvedValue(updatedType),
+          },
+          resource: {
+            findMany: jest.fn().mockResolvedValue(associatedResources),
+            update: jest.fn().mockImplementation(({ where, data }) => ({
+              ...associatedResources.find((r) => r.id === where.id),
+              ...data,
+            })),
+          },
+          $transaction: jest.fn(),
+          $connect: jest.fn(),
+          $disconnect: jest.fn(),
+          $on: jest.fn(),
+          $use: jest.fn(),
+          $executeRaw: jest.fn(),
+          $executeRawUnsafe: jest.fn(),
+          $queryRaw: jest.fn(),
+          $queryRawUnsafe: jest.fn(),
+        } as unknown as Prisma.TransactionClient; // 👈 typ wymuszony dla pełnej zgodności struktury
+
+        return cb(tx);
+      },
+    );
 
     const res = await request(app).patch(endpoint).send(newData);
 

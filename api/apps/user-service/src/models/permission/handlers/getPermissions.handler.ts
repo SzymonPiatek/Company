@@ -10,6 +10,8 @@ type PermissionsQueryProps = {
   name?: string;
   description?: string;
   search?: string;
+  action?: string;
+  subject?: string;
 };
 
 const getPermissionsHandler: RequestHandler = async (req, res) => {
@@ -19,14 +21,14 @@ const getPermissionsHandler: RequestHandler = async (req, res) => {
     const orderBy = buildOrderBy<Permission>({
       sortBy: pagination.sortBy,
       sortOrder: pagination.sortOrder,
-      allowedFields: ['id', 'name', 'description', 'createdAt', 'updatedAt'],
+      allowedFields: ['id', 'name', 'description', 'action', 'subject', 'createdAt', 'updatedAt'],
     });
 
-    const { name, description, search } = req.query as PermissionsQueryProps;
+    const { name, description, action, subject, search } = req.query as PermissionsQueryProps;
 
     const where = buildQueryConditions({
-      fields: ['name', 'description'],
-      filters: { name, description },
+      fields: ['name', 'description', 'action', 'subject'],
+      filters: { name, description, action, subject },
       search,
     });
 

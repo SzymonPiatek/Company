@@ -36,6 +36,8 @@ describe('GET /api/user/permissions (mocked)', () => {
           id: 'perm-1',
           name: 'create_user',
           description: 'Can create users',
+          action: 'CREATE',
+          subject: 'USER',
         },
       ],
       meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
@@ -52,11 +54,11 @@ describe('GET /api/user/permissions (mocked)', () => {
     expect(buildOrderBy).toHaveBeenCalledWith({
       sortBy: 'createdAt',
       sortOrder: 'asc',
-      allowedFields: ['id', 'name', 'description', 'createdAt', 'updatedAt'],
+      allowedFields: ['id', 'name', 'description', 'action', 'subject', 'createdAt', 'updatedAt'],
     });
     expect(buildQueryConditions).toHaveBeenCalledWith({
-      fields: ['name', 'description'],
-      filters: { name: 'user', description: undefined },
+      fields: ['name', 'description', 'action', 'subject'],
+      filters: { name: 'user', description: undefined, action: undefined, subject: undefined },
       search: undefined,
     });
     expect(paginateData).toHaveBeenCalledWith(

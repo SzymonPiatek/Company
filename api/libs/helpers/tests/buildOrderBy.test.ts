@@ -7,6 +7,14 @@ describe('buildOrderBy', () => {
     id: string;
     name: string;
     createdAt: Date;
+    type?: {
+      name: string;
+      code: string;
+      secret?: string;
+    };
+    author?: {
+      name: string;
+    };
   };
 
   it('should return sort by allowed field', () => {
@@ -30,7 +38,7 @@ describe('buildOrderBy', () => {
   });
 
   it('should return nested sort for allowed relation', () => {
-    const result = buildOrderBy<any>({
+    const result = buildOrderBy<Dummy>({
       sortBy: 'type.name',
       sortOrder: 'asc',
       allowedFields: ['id'],
@@ -47,7 +55,7 @@ describe('buildOrderBy', () => {
   });
 
   it('should return empty object for disallowed relation field', () => {
-    const result = buildOrderBy<any>({
+    const result = buildOrderBy<Dummy>({
       sortBy: 'type.secret',
       sortOrder: 'asc',
       allowedFields: ['id'],
@@ -62,7 +70,7 @@ describe('buildOrderBy', () => {
   });
 
   it('should return empty object for non-existent relation', () => {
-    const result = buildOrderBy<any>({
+    const result = buildOrderBy<Dummy>({
       sortBy: 'author.name',
       sortOrder: 'asc',
       allowedFields: ['id'],
@@ -90,8 +98,8 @@ describe('buildOrderBy', () => {
   });
 
   it('should allow any field if allowedFields is not provided', () => {
-    const result = buildOrderBy<any>({
-      sortBy: 'randomField',
+    const result = buildOrderBy<Dummy>({
+      sortBy: 'randomField' as keyof Dummy,
       sortOrder: 'asc',
     });
 
@@ -99,8 +107,8 @@ describe('buildOrderBy', () => {
   });
 
   it('should allow any field if allowedFields is an empty array', () => {
-    const result = buildOrderBy<any>({
-      sortBy: 'anything',
+    const result = buildOrderBy<Dummy>({
+      sortBy: 'anything' as keyof Dummy,
       sortOrder: 'desc',
       allowedFields: [],
     });
