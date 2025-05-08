@@ -14,6 +14,21 @@ const getUserByIdHandler: RequestHandler = async (req, res): Promise<void> => {
       omit: {
         password: true,
       },
+      include: {
+        roles: {
+          include: {
+            role: {
+              include: {
+                permissions: {
+                  include: {
+                    permission: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!result) {

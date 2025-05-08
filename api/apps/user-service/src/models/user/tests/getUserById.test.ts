@@ -25,6 +25,28 @@ describe('GET /api/user/users/:id (mocked)', () => {
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
+      roles: [
+        {
+          role: {
+            id: 'role-1',
+            name: 'admin',
+            permissions: [
+              {
+                permission: {
+                  id: 'perm-1',
+                  name: 'read:user',
+                  action: 'read',
+                  subject: 'user',
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                },
+              },
+            ],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      ],
     };
 
     (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
@@ -34,6 +56,21 @@ describe('GET /api/user/users/:id (mocked)', () => {
     expect(prisma.user.findUnique).toHaveBeenCalledWith({
       where: { id: userId },
       omit: { password: true },
+      include: {
+        roles: {
+          include: {
+            role: {
+              include: {
+                permissions: {
+                  include: {
+                    permission: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     expect(res.status).toBe(200);
@@ -42,6 +79,7 @@ describe('GET /api/user/users/:id (mocked)', () => {
       email: mockUser.email,
       firstName: mockUser.firstName,
       lastName: mockUser.lastName,
+      roles: expect.any(Array),
     });
     expect(res.body).not.toHaveProperty('password');
   });
