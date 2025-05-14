@@ -1,11 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
 
 jest.mock(
-  '../helpers/middlewares/auth.middleware',
+  '../middlewares/auth.middleware',
   () => (_req: Request, _res: Response, next: NextFunction) => next(),
 );
 jest.mock(
-  '../helpers/middlewares/emptyBody.middleware',
+  '../middlewares/emptyBody.middleware',
   () => (_req: Request, _res: Response, next: NextFunction) => next(),
 );
 jest.mock('axios');

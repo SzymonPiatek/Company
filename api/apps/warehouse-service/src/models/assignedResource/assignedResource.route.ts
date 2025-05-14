@@ -3,7 +3,7 @@ import createAssignedResourceHandler from '../../models/assignedResource/handler
 import getAssignedResourcesHandler from '../../models/assignedResource/handlers/getAssignedResources.handler';
 import getAssignedResourceByIdHandler from '../../models/assignedResource/handlers/getAssignedResourceById.handler';
 import updateAssignedResourceHandler from '../../models/assignedResource/handlers/updateAssignedResource.handler';
-import authMiddleware from '@libs/helpers/middlewares/auth.middleware';
+import authMiddleware from '@libs/middlewares/auth.middleware';
 
 const router = Router();
 

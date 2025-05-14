@@ -3,7 +3,7 @@ import getUsersHandler from './handlers/getUsers.handler';
 import getUserByIdHandler from './handlers/getUserById.handler';
 import createUserHandler from './handlers/createUser.handler';
 import updateUserHandler from './handlers/updateUser.handler';
-import authMiddleware from '@libs/helpers/middlewares/auth.middleware';
+import authMiddleware from '@libs/middlewares/auth.middleware';
 
 const router = Router();
 

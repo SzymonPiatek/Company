@@ -3,7 +3,7 @@ import getResourceTypesHandler from './handlers/getResourceTypes.handler';
 import getResourceTypeByIdHandler from './handlers/getResourceTypeById.handler';
 import createResourceTypeHandler from './handlers/createResourceType.handler';
 import editResourcesTypeHandler from './handlers/updateResourceType.handler';
-import authMiddleware from '@libs/helpers/middlewares/auth.middleware';
+import authMiddleware from '@libs/middlewares/auth.middleware';
 
 const router = Router();
 

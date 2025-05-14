@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import authMiddleware from '@libs/helpers/middlewares/auth.middleware';
+import authMiddleware from '@libs/middlewares/auth.middleware';
 import getRolesHandler from '@apps/user-service/src/models/role/handlers/getRoles.handler';
 import getRoleByIdHandler from '@apps/user-service/src/models/role/handlers/getRoleById.handler';
 import createRoleHandler from '@apps/user-service/src/models/role/handlers/createRole.handler';
 import updateRoleHandler from '@apps/user-service/src/models/role/handlers/updateRole.handler';
-import emptyBodyMiddleware from '@libs/helpers/middlewares/emptyBody.middleware';
+import emptyBodyMiddleware from '@libs/middlewares/emptyBody.middleware';
 
 const router = Router();
 

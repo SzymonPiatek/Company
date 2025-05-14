@@ -3,7 +3,7 @@ import getPermissionsHandler from '@apps/user-service/src/models/permission/hand
 import getPermissionByIdHandler from '@apps/user-service/src/models/permission/handlers/getPermissionById.handler';
 import createPermissionHandler from '@apps/user-service/src/models/permission/handlers/createPermission.handler';
 import updatePermissionHandler from '@apps/user-service/src/models/permission/handlers/updatePermission.handler';
-import authMiddleware from '@libs/helpers/middlewares/auth.middleware';
+import authMiddleware from '@libs/middlewares/auth.middleware';
 
 const router = Router();
 

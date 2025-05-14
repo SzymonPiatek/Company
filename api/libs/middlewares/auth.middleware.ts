@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verify, TokenExpiredError } from 'jsonwebtoken';
-import { generateAccessToken, generateRefreshToken } from '@libs/helpers/jwt';
+import { generateAccessToken, generateRefreshToken } from '../helpers/jwt';
 
 type VerifiedTokenPayload = { userId: string; iat?: number; exp?: number };
 

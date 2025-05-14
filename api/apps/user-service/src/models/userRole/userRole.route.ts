@@ -2,7 +2,7 @@ import { Router } from 'express';
 import assignRoleHandler from '@apps/user-service/src/models/userRole/handlers/assignRole.handler';
 import removeRoleHandler from '@apps/user-service/src/models/userRole/handlers/removeRole.handler';
 import getUserRolesHandler from '@apps/user-service/src/models/userRole/handlers/getUserRoles.handler';
-import authMiddleware from '@libs/helpers/middlewares/auth.middleware';
+import authMiddleware from '@libs/middlewares/auth.middleware';
 
 const router = Router();
 
