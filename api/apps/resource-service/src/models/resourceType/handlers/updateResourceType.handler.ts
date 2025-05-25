@@ -1,5 +1,6 @@
 import type { RequestHandler } from 'express';
 import prisma from '../../../prismaClient';
+import extractNumericSuffix from '@libs/helpers/extractNumericSuffix';
 
 type ResourceTypeParamsProps = {
   id: string;
@@ -65,8 +66,7 @@ const updateResourceTypeHandler: RequestHandler = async (req, res): Promise<void
 
         await Promise.all(
           resources.map((resource) => {
-            const match = resource.code?.match(/-(\d+)$/);
-            const numeric = match?.[1]?.padStart(6, '0') || '000001';
+            const numeric = extractNumericSuffix(data.code);
             const newCode = `${data.code}-${numeric}`;
 
             return tx.resource.update({

@@ -1,83 +1,79 @@
 import request from 'supertest';
 import app from '../../../app';
 import prisma from '../../../prismaClient';
-import { createTestUser, mockAccessToken } from '@libs/tests/setup';
+
+jest.mock('../../../prismaClient', () => ({
+  resourceType: {
+    findUnique: jest.fn(),
+    create: jest.fn(),
+  },
+}));
 
 const baseUrl = '/api/resource/resourceTypes';
-const testEmail = 'getuser@example.com';
-const testPassword = 'Test1234!';
 
-describe('POST /api/resource/resourceTypes', () => {
-  const unique = Date.now();
-  const name = `TypeName ${unique}`;
-  const code = `CODE-${unique}`;
-  let testUserId: string;
-  let accessToken: string;
+describe('POST /api/resource/resourceTypes (mocked)', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-  const postRequest = async ({ body }: { body: object }) => {
-    return await request(app)
-      .post(baseUrl)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send(body);
+  const payload = {
+    name: 'Test Type',
+    code: 'TEST',
   };
 
-  beforeAll(async () => {
-    const user = await createTestUser(prisma, {
-      email: testEmail,
-      password: testPassword,
+  it('should create a resource type and return 201', async () => {
+    (prisma.resourceType.findUnique as jest.Mock).mockResolvedValueOnce(null); // name
+    (prisma.resourceType.findUnique as jest.Mock).mockResolvedValueOnce(null); // code
+
+    const mockType = {
+      id: 'type-123',
+      ...payload,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    (prisma.resourceType.create as jest.Mock).mockResolvedValue(mockType);
+
+    const res = await request(app).post(baseUrl).send(payload);
+
+    expect(prisma.resourceType.findUnique).toHaveBeenNthCalledWith(1, {
+      where: { name: payload.name },
     });
-
-    testUserId = user.id;
-    accessToken = mockAccessToken(testUserId);
-  });
-
-  afterAll(async () => {
-    await prisma.user.delete({ where: { id: testUserId } });
-  });
-
-  afterEach(async () => {
-    await prisma.resourceType.deleteMany({
-      where: {
-        OR: [{ name }, { code }],
-      },
+    expect(prisma.resourceType.findUnique).toHaveBeenNthCalledWith(2, {
+      where: { code: payload.code },
     });
-  });
-
-  it('should create a new resource type and return 201', async () => {
-    const res = await postRequest({ body: { name, code } });
+    expect(prisma.resourceType.create).toHaveBeenCalledWith({ data: payload });
 
     expect(res.status).toBe(201);
-    expect(res.body).toMatchObject({ name, code });
+    expect(res.body).toMatchObject(payload);
   });
 
-  it('should return 404 if name already exists', async () => {
-    await postRequest({ body: { name, code } });
+  it('should return 404 if resource name already exists', async () => {
+    (prisma.resourceType.findUnique as jest.Mock).mockResolvedValueOnce({ id: 'existing-id' });
 
-    const res = await postRequest({ body: { name, code: `CODE-${Date.now()}` } });
+    const res = await request(app).post(baseUrl).send(payload);
 
     expect(res.status).toBe(404);
-    expect(res.body.error).toBe('Resource name already exists');
+    expect(res.body).toEqual({ error: 'Resource name already exists' });
   });
 
-  it('should return 404 if code already exists', async () => {
-    await postRequest({ body: { name, code } });
+  it('should return 404 if resource code already exists', async () => {
+    (prisma.resourceType.findUnique as jest.Mock).mockResolvedValueOnce(null);
+    (prisma.resourceType.findUnique as jest.Mock).mockResolvedValueOnce({ id: 'existing-id' });
 
-    const res = await postRequest({ body: { name: `Another Name ${Date.now()}`, code } });
+    const res = await request(app).post(baseUrl).send(payload);
 
     expect(res.status).toBe(404);
-    expect(res.body.error).toBe('Resource code already exists');
+    expect(res.body).toEqual({ error: 'Resource code already exists' });
   });
 
   it('should return 500 on internal error', async () => {
-    const spy = jest
-      .spyOn(prisma.resourceType, 'findUnique')
-      .mockRejectedValueOnce(new Error('DB fail'));
+    (prisma.resourceType.findUnique as jest.Mock).mockRejectedValue(new Error('DB Error'));
 
-    const res = await postRequest({ body: { name: 'Fail', code: 'FAIL-CODE' } });
+    const res = await request(app).post(baseUrl).send(payload);
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Internal Server Error');
-
-    spy.mockRestore();
+    expect(res.body).toHaveProperty('error', 'Internal Server Error');
+    expect(res.body).toHaveProperty('details');
   });
 });

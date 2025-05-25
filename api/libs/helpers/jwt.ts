@@ -1,7 +1,7 @@
 import { sign, type Secret, type SignOptions } from 'jsonwebtoken';
 
 type GenerateTokenProps = {
-  userId: string;
+  payload: object;
   secret: Secret;
   exp: SignOptions['expiresIn'];
 };
@@ -10,8 +10,8 @@ type GenerateAccessOrRefreshTokenProps = {
   userId: string;
 };
 
-const generateToken = ({ userId, secret, exp }: GenerateTokenProps): string => {
-  return sign({ sub: userId }, secret, { expiresIn: exp });
+const generateToken = ({ payload, secret, exp }: GenerateTokenProps): string => {
+  return sign(payload, secret, { expiresIn: exp });
 };
 
 export const generateAccessToken = ({ userId }: GenerateAccessOrRefreshTokenProps) => {
@@ -21,7 +21,7 @@ export const generateAccessToken = ({ userId }: GenerateAccessOrRefreshTokenProp
   if (!secret || !exp) throw new Error('Missing ACCESS_TOKEN_SECRET or EXP');
 
   return generateToken({
-    userId,
+    payload: { userId },
     secret,
     exp: exp as SignOptions['expiresIn'],
   });
@@ -34,7 +34,7 @@ export const generateRefreshToken = ({ userId }: GenerateAccessOrRefreshTokenPro
   if (!secret || !exp) throw new Error('Missing REFRESH_TOKEN_SECRET or EXP');
 
   return generateToken({
-    userId,
+    payload: { userId },
     secret,
     exp: exp as SignOptions['expiresIn'],
   });

@@ -1,82 +1,59 @@
 import request from 'supertest';
 import app from '../../../app';
 import prisma from '../../../prismaClient';
-import { v4 as uuid } from 'uuid';
-import { createTestUser, mockAccessToken } from '@libs/tests/setup';
+
+jest.mock('../../../prismaClient', () => ({
+  resourceLocation: {
+    findUnique: jest.fn(),
+    create: jest.fn(),
+  },
+}));
 
 const baseUrl = '/api/warehouse/resourceLocations';
-const testEmail = 'getuser@example.com';
-const testPassword = 'Test1234!';
 
-describe('POST /resourceLocations', () => {
-  let locationName: string;
-  let testUserId: string;
-  let accessToken: string;
-
-  const postRequest = (body: object) =>
-    request(app).post(baseUrl).set('Authorization', `Bearer ${accessToken}`).send(body);
-
-  beforeAll(async () => {
-    const user = await createTestUser(prisma, {
-      email: testEmail,
-      password: testPassword,
-      firstName: 'Get',
-      lastName: 'User',
-    });
-
-    testUserId = user.id;
-    accessToken = mockAccessToken(testUserId);
-  });
-
-  afterAll(async () => {
-    await prisma.user.delete({ where: { id: testUserId } });
-  });
-
-  beforeEach(() => {
-    locationName = `Loc-${uuid()}`;
-  });
-
-  afterEach(async () => {
-    await prisma.resourceLocation.deleteMany({
-      where: {
-        name: {
-          startsWith: 'Loc-',
-        },
-      },
-    });
+describe('POST /api/warehouse/resourceLocations (mocked)', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should create a new resource location and return 201', async () => {
-    const res = await postRequest({ name: locationName, description: 'Test description' });
+    const payload = { name: 'Main Warehouse', description: 'Main site storage' };
+    const mockCreated = { id: 'loc-123', ...payload, createdAt: new Date(), updatedAt: new Date() };
+
+    (prisma.resourceLocation.findUnique as jest.Mock).mockResolvedValue(null);
+    (prisma.resourceLocation.create as jest.Mock).mockResolvedValue(mockCreated);
+
+    const res = await request(app).post(baseUrl).send(payload);
+
+    expect(prisma.resourceLocation.findUnique).toHaveBeenCalledWith({
+      where: { name: payload.name },
+    });
+    expect(prisma.resourceLocation.create).toHaveBeenCalledWith({ data: payload });
 
     expect(res.status).toBe(201);
-    expect(res.body).toMatchObject({
-      name: locationName,
-      description: 'Test description',
-    });
+    expect(res.body).toMatchObject(payload);
   });
 
-  it('should return 409 if location name already exists', async () => {
-    await prisma.resourceLocation.create({
-      data: { name: locationName },
-    });
+  it('should return 409 if location with same name exists', async () => {
+    const payload = { name: 'Duplicate Location' };
+    (prisma.resourceLocation.findUnique as jest.Mock).mockResolvedValue({ id: 'existing' });
 
-    const res = await postRequest({ name: locationName });
+    const res = await request(app).post(baseUrl).send(payload);
 
     expect(res.status).toBe(409);
-    expect(res.body.error).toBe('Resource location with this name already exists.');
+    expect(res.body).toEqual({
+      error: 'Resource location with this name already exists.',
+    });
   });
 
   it('should return 500 on internal error', async () => {
-    const spy = jest
-      .spyOn(prisma.resourceLocation, 'findUnique')
-      .mockRejectedValueOnce(new Error('Simulated crash'));
+    const payload = { name: 'Broken' };
+    (prisma.resourceLocation.findUnique as jest.Mock).mockRejectedValue(new Error('DB error'));
 
-    const res = await postRequest({ name: locationName });
+    const res = await request(app).post(baseUrl).send(payload);
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Internal Server Error');
-
-    spy.mockRestore();
+    expect(res.body).toHaveProperty('error', 'Internal Server Error');
+    expect(res.body).toHaveProperty('details');
   });
 });

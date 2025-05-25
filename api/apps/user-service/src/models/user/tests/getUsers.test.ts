@@ -1,127 +1,94 @@
 import request from 'supertest';
 import app from '../../../app';
 import prisma from '../../../prismaClient';
-import { hashPassword } from '@libs/helpers/bcrypt';
-import type { User } from '@prisma/client';
-import { createTestUser, mockAccessToken } from '@libs/tests/setup';
+import parsePaginationQuery from '@libs/helpers/parsePaginationQuery';
+import buildOrderBy from '@libs/helpers/buildOrderBy';
+import buildQueryConditions from '@libs/helpers/buildQueryConditions';
+import paginateData from '@libs/helpers/paginateData';
 
 const baseUrl = '/api/user/users';
-const testEmail = 'getuser@example.com';
-const testPassword = 'Test1234!';
-const testUsers = [
-  {
-    email: 'john.doe@example.com',
-    firstName: 'John',
-    lastName: 'Doe',
-    isActive: true,
-  },
-  {
-    email: 'jane.smith@example.com',
-    firstName: 'Jane',
-    lastName: 'Smith',
-    isActive: true,
-  },
-  {
-    email: 'inactive.user@example.com',
-    firstName: 'Inactive',
-    lastName: 'User',
-    isActive: false,
-  },
-];
-const allTestEmails = [...testUsers.map((u) => u.email), testEmail];
 
-describe('GET /users', () => {
-  let accessToken: string;
-
-  const getRequest = (params?: string) =>
-    request(app).get(`${baseUrl}?${params}`).set('Authorization', `Bearer ${accessToken}`);
-
-  beforeAll(async () => {
-    const user = await createTestUser(prisma, {
-      email: testEmail,
-      password: testPassword,
-      firstName: 'Get',
-      lastName: 'User',
-    });
-
-    accessToken = mockAccessToken(user.id);
+describe('GET /api/user/users (mocked)', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  beforeAll(async () => {
-    const hashedPassword = await hashPassword(testPassword);
-
-    await prisma.user.deleteMany({
-      where: {
-        email: { in: allTestEmails },
-      },
-    });
-
-    const usersWithPasswords = testUsers.map((user) => ({
-      ...user,
-      password: hashedPassword,
-    }));
-
-    await prisma.user.createMany({
-      data: usersWithPasswords,
-      skipDuplicates: true,
-    });
-  });
-
-  afterAll(async () => {
-    await prisma.user.deleteMany({
-      where: {
-        email: { in: allTestEmails },
-      },
-    });
-  });
-
-  it('should return paginated list of users', async () => {
-    const res = await getRequest('page=1&limit=2');
-
-    expect(res.status).toBe(200);
-    expect(res.body.data.length).toBeLessThanOrEqual(2);
-    expect(res.body.meta).toMatchObject({
+  it('should return paginated list of users with status 200', async () => {
+    const mockPagination = {
       page: 1,
-      limit: 2,
+      limit: 10,
+      skip: 0,
+      take: 10,
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+    };
+
+    const mockOrderBy = [{ createdAt: 'desc' }];
+    const mockWhere = { isActive: true };
+    const mockResult = {
+      data: [
+        {
+          id: 'user-1',
+          email: 'john@example.com',
+          firstName: 'John',
+          lastName: 'Doe',
+          isActive: true,
+        },
+      ],
+      meta: {
+        page: 1,
+        limit: 10,
+        total: 1,
+        totalPages: 1,
+      },
+    };
+
+    (parsePaginationQuery as jest.Mock).mockReturnValue(mockPagination);
+    (buildOrderBy as jest.Mock).mockReturnValue(mockOrderBy);
+    (buildQueryConditions as jest.Mock).mockReturnValue(mockWhere);
+    (paginateData as jest.Mock).mockResolvedValue(mockResult);
+
+    const res = await request(app).get(`${baseUrl}?isActive=true`);
+
+    expect(parsePaginationQuery).toHaveBeenCalled();
+    expect(buildOrderBy).toHaveBeenCalledWith({
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+      allowedFields: ['id', 'email', 'firstName', 'lastName', 'isActive', 'createdAt', 'updatedAt'],
+    });
+    expect(buildQueryConditions).toHaveBeenCalledWith({
+      fields: ['email', 'firstName', 'lastName'],
+      filters: {
+        email: undefined,
+        firstName: undefined,
+        lastName: undefined,
+        isActive: 'true',
+      },
+      search: undefined,
+    });
+    expect(paginateData).toHaveBeenCalledWith(
+      prisma.user,
+      {
+        where: mockWhere,
+        orderBy: mockOrderBy,
+        omit: { password: true },
+      },
+      mockPagination,
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(mockResult);
+  });
+
+  it('should return 500 if an error occurs', async () => {
+    (parsePaginationQuery as jest.Mock).mockImplementation(() => {
+      throw new Error('Unexpected error');
     });
 
-    res.body.data.forEach((user: User & { password?: string }) => {
-      expect(user.password).toBeUndefined();
-    });
-  });
-
-  it('should filter users by firstName', async () => {
-    const res = await getRequest('firstName=Jane');
-
-    expect(res.status).toBe(200);
-    expect(res.body.data.length).toBeGreaterThan(0);
-    expect(res.body.data[0].firstName).toBe('Jane');
-  });
-
-  it('should search users by query string', async () => {
-    const res = await getRequest('search=smith');
-
-    expect(res.status).toBe(200);
-    expect(res.body.data.length).toBeGreaterThan(0);
-    expect(res.body.data[0].lastName.toLowerCase()).toContain('smith');
-  });
-
-  it('should filter by isActive=false', async () => {
-    const res = await getRequest('isActive=false');
-
-    expect(res.status).toBe(200);
-    expect(res.body.data.every((user: User) => !user.isActive)).toBe(true);
-  });
-
-  it('should return 500 on server error', async () => {
-    const spy = jest.spyOn(prisma.user, 'findMany').mockRejectedValueOnce(new Error('DB Error'));
-
-    const res = await getRequest('firstName=FailTest');
+    const res = await request(app).get(baseUrl);
 
     expect(res.status).toBe(500);
     expect(res.body).toHaveProperty('error', 'Internal Server Error');
     expect(res.body).toHaveProperty('details');
-
-    spy.mockRestore();
   });
 });

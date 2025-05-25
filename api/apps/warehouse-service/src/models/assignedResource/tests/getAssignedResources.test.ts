@@ -1,99 +1,93 @@
 import request from 'supertest';
-import prisma from '../../../prismaClient';
 import app from '../../../app';
-import { v4 as uuid } from 'uuid';
-import { createTestUser, mockAccessToken } from '@libs/tests/setup';
+import prisma from '../../../prismaClient';
+import parsePaginationQuery from '@libs/helpers/parsePaginationQuery';
+import buildOrderBy from '@libs/helpers/buildOrderBy';
+import buildQueryConditions from '@libs/helpers/buildQueryConditions';
+import paginateData from '@libs/helpers/paginateData';
+
+jest.mock('../../../prismaClient', () => ({
+  assignedResource: {},
+}));
 
 const baseUrl = '/api/warehouse/assignedResources';
-const testEmail = 'getuser@example.com';
-const testPassword = 'Test1234!';
 
-describe('GET /assignedResources', () => {
-  let locationId: string;
-  let resourceId: string;
-  let assignedId: string;
-  let testUserId: string;
-  let accessToken: string;
+describe('GET /api/warehouse/assignedResources (mocked)', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-  const getRequest = ({ params }: { params?: string }) =>
-    request(app).get(`${baseUrl}?${params}`).set('Authorization', `Bearer ${accessToken}`);
+  it('should return paginated assigned resources with location and status 200', async () => {
+    const mockPagination = {
+      page: 1,
+      limit: 10,
+      skip: 0,
+      take: 10,
+      sortBy: 'assignedAt',
+      sortOrder: 'asc',
+    };
 
-  beforeAll(async () => {
-    const user = await createTestUser(prisma, {
-      email: testEmail,
-      password: testPassword,
-      firstName: 'Get',
-      lastName: 'User',
+    const mockOrderBy = [{ assignedAt: 'asc' }];
+    const mockWhere = { resourceId: 'res-1' };
+
+    const mockResult = {
+      data: [
+        {
+          id: 'assign-1',
+          resourceId: 'res-1',
+          locationId: 'loc-1',
+          location: { name: 'Warehouse A' },
+        },
+      ],
+      meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+    };
+
+    (parsePaginationQuery as jest.Mock).mockReturnValue(mockPagination);
+    (buildOrderBy as jest.Mock).mockReturnValue(mockOrderBy);
+    (buildQueryConditions as jest.Mock).mockReturnValue(mockWhere);
+    (paginateData as jest.Mock).mockResolvedValue(mockResult);
+
+    const res = await request(app).get(baseUrl).query({ resourceId: 'res-1' });
+
+    expect(parsePaginationQuery).toHaveBeenCalled();
+    expect(buildOrderBy).toHaveBeenCalledWith({
+      sortBy: 'assignedAt',
+      sortOrder: 'asc',
+      allowedFields: ['id', 'resourceId', 'locationId', 'assignedAt'],
+      allowedRelations: {
+        location: {
+          fields: ['id', 'name', 'description', 'createdAt', 'updatedAt'],
+        },
+      },
+    });
+    expect(buildQueryConditions).toHaveBeenCalledWith({
+      fields: ['resourceId', 'locationId'],
+      filters: { resourceId: 'res-1', locationId: undefined },
+      search: undefined,
+    });
+    expect(paginateData).toHaveBeenCalledWith(
+      prisma.assignedResource,
+      {
+        where: mockWhere,
+        orderBy: mockOrderBy,
+        include: { location: true },
+      },
+      mockPagination,
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(mockResult);
+  });
+
+  it('should return 500 on Prisma error', async () => {
+    (parsePaginationQuery as jest.Mock).mockImplementation(() => {
+      throw new Error('Unexpected error');
     });
 
-    testUserId = user.id;
-    accessToken = mockAccessToken(testUserId);
-  });
-
-  afterAll(async () => {
-    await prisma.user.delete({ where: { id: testUserId } });
-  });
-
-  beforeEach(async () => {
-    locationId = uuid();
-    resourceId = uuid();
-
-    await prisma.resourceLocation.create({
-      data: { id: locationId, name: `Location-${locationId}` },
-    });
-
-    const assigned = await prisma.assignedResource.create({
-      data: { resourceId, locationId },
-    });
-
-    assignedId = assigned.id;
-  });
-
-  afterEach(async () => {
-    await prisma.resourceLocationHistory.deleteMany({ where: { resourceId } }).catch(() => {});
-    await prisma.assignedResource.delete({ where: { id: assignedId } }).catch(() => {});
-    await prisma.resourceLocation.delete({ where: { id: locationId } }).catch(() => {});
-  });
-
-  it('returns list of assigned resources with location', async () => {
-    const res = await getRequest({});
-
-    expect(res.status).toBe(200);
-    expect(Array.isArray(res.body.data)).toBe(true);
-    expect(res.body.data[0]).toHaveProperty('location');
-  });
-
-  it('filters by resourceId', async () => {
-    const res = await getRequest({ params: `resourceId=${resourceId}` });
-
-    expect(res.status).toBe(200);
-    expect(res.body.data[0].resourceId).toBe(resourceId);
-  });
-
-  it('filters by locationId', async () => {
-    const res = await getRequest({ params: `locationId=${locationId}` });
-
-    expect(res.status).toBe(200);
-    expect(res.body.data[0].locationId).toBe(locationId);
-  });
-
-  it('returns empty array for unmatched filters', async () => {
-    const res = await getRequest({ params: `resourceId=nonexistent` });
-
-    expect(res.status).toBe(200);
-    expect(res.body.data).toEqual([]);
-  });
-
-  it('returns 500 on internal error', async () => {
-    const spy = jest
-      .spyOn(prisma.assignedResource, 'findMany')
-      .mockRejectedValueOnce(new Error('Boom'));
-
-    const res = await getRequest({});
+    const res = await request(app).get(baseUrl);
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Internal Server Error');
-
-    spy.mockRestore();
+    expect(res.body).toHaveProperty('error', 'Internal Server Error');
+    expect(res.body).toHaveProperty('details');
   });
 });

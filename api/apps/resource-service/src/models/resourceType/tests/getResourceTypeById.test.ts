@@ -1,88 +1,78 @@
 import request from 'supertest';
 import app from '../../../app';
 import prisma from '../../../prismaClient';
-import { createTestUser, mockAccessToken } from '@libs/tests/setup';
 
-const baseUrl = (id: string) => `/api/resource/resourceTypes/${id}`;
-const testEmail = 'getuser@example.com';
-const testPassword = 'Test1234!';
+jest.mock('../../../prismaClient', () => ({
+  resourceType: {
+    findUnique: jest.fn(),
+  },
+}));
 
-describe('GET /api/resource/resourceTypes/:id', () => {
-  const unique = Date.now();
-  const typeId = `type-${unique}`;
-  const typeName = `Type Name ${unique}`;
-  const typeCode = `TYPE-${unique}`;
-  let createdTypeId: string;
-  let testUserId: string;
-  let accessToken: string;
+const baseUrl = '/api/resource/resourceTypes';
 
-  const getRequest = async ({ id }: { id: string }) => {
-    return await request(app).get(baseUrl(id)).set('Authorization', `Bearer ${accessToken}`);
-  };
+describe('GET /api/resource/resourceTypes/:id (mocked)', () => {
+  const resourceTypeId = 'type-123';
+  const endpoint = `${baseUrl}/${resourceTypeId}`;
 
-  beforeAll(async () => {
-    const user = await createTestUser(prisma, {
-      email: testEmail,
-      password: testPassword,
-    });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-    testUserId = user.id;
-    accessToken = mockAccessToken(testUserId);
-
-    const createdType = await prisma.resourceType.create({
-      data: {
-        id: typeId,
-        name: typeName,
-        code: typeCode,
-        resources: {
-          create: [
-            { name: 'Res A', code: `${typeCode}-001`, isActive: true },
-            { name: 'Res B', code: `${typeCode}-002`, isActive: false },
-          ],
+  it('should return resource type with resources and status 200', async () => {
+    const mockResourceType = {
+      id: resourceTypeId,
+      name: 'Test Type',
+      code: 'RES',
+      resources: [
+        {
+          id: 'res-1',
+          name: 'Resource A',
+          typeId: resourceTypeId,
+          code: 'RES-000001',
         },
-      },
+      ],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    (prisma.resourceType.findUnique as jest.Mock).mockResolvedValue(mockResourceType);
+
+    const res = await request(app).get(endpoint);
+
+    expect(prisma.resourceType.findUnique).toHaveBeenCalledWith({
+      where: { id: resourceTypeId },
+      include: { resources: true },
     });
-
-    createdTypeId = createdType.id;
-  });
-
-  afterAll(async () => {
-    await prisma.user.delete({ where: { id: testUserId } });
-    await prisma.resource.deleteMany({ where: { typeId } });
-    await prisma.resourceType.delete({ where: { id: createdTypeId } });
-  });
-
-  it('should return 200 and resource type data if found', async () => {
-    const res = await getRequest({ id: createdTypeId });
 
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({
-      id: createdTypeId,
-      name: typeName,
-      code: typeCode,
+      id: resourceTypeId,
+      name: 'Test Type',
+      resources: [
+        {
+          name: 'Resource A',
+          code: 'RES-000001',
+        },
+      ],
     });
-
-    expect(Array.isArray(res.body.resources)).toBe(true);
-    expect(res.body.resources).toHaveLength(2);
   });
 
   it('should return 404 if resource type not found', async () => {
-    const res = await getRequest({ id: 'non-existent-id' });
+    (prisma.resourceType.findUnique as jest.Mock).mockResolvedValue(null);
+
+    const res = await request(app).get(endpoint);
 
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: 'Resource not found' });
   });
 
   it('should return 500 on internal error', async () => {
-    const spy = jest
-      .spyOn(prisma.resourceType, 'findUnique')
-      .mockRejectedValueOnce(new Error('DB FAIL'));
+    (prisma.resourceType.findUnique as jest.Mock).mockRejectedValue(new Error('DB error'));
 
-    const res = await getRequest({ id: createdTypeId });
+    const res = await request(app).get(endpoint);
 
     expect(res.status).toBe(500);
-    expect(res.body.error).toBe('Internal Server Error');
-
-    spy.mockRestore();
+    expect(res.body).toHaveProperty('error', 'Internal Server Error');
+    expect(res.body).toHaveProperty('details');
   });
 });

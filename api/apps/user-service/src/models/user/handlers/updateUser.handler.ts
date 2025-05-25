@@ -45,8 +45,7 @@ const updateUserHandler: RequestHandler = async (req, res): Promise<void> => {
 
     res.status(200).json(updatedUser);
   } catch (error) {
-    console.error('Update user error:', error);
-    res.status(500).json({ error: 'Failed to update user', details: error });
+    res.status(500).json({ error: 'Internal Server Error', details: error });
   }
 };
 
